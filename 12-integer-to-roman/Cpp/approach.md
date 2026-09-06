@@ -1,13 +1,13 @@
-![Runtime](https://img.shields.io/badge/Runtime-1%20ms%20(beats%2076.20%25)-green?style=for-the-badge)
-![Memory](https://img.shields.io/badge/Memory-9.2%20MB%20(beats%2082.71%25)-brightgreen?style=for-the-badge)
+![Runtime](https://img.shields.io/badge/Runtime-1%20ms%20(beats%2076.17%25)-green?style=for-the-badge)
+![Memory](https://img.shields.io/badge/Memory-9.2%20MB%20(beats%2082.74%25)-brightgreen?style=for-the-badge)
 
 ---
 
 ## Problem Explained
 
-The goal is to convert a standard base-10 integer (from 1 to 3999) into a string representing its **Roman numeral** equivalent.
+The goal is to convert an integer between 1 and 3999 into a **Roman numeral**.
 
-Roman numerals are written from left to right, starting with the largest place value (thousands) down to the smallest (ones). The standard symbol values are:
+Roman numerals use seven basic symbols:
 * **I** = 1
 * **V** = 5
 * **X** = 10
@@ -16,79 +16,110 @@ Roman numerals are written from left to right, starting with the largest place v
 * **D** = 500
 * **M** = 1000
 
-Normally, symbols are repeated to add up to a value (for example, 3 is **III**). However, standard Roman numerals do not allow repeating a symbol 4 times in a row. Instead, special **subtractive forms** are used for values starting with 4 or 9:
-* 4 is **IV** (1 before 5) and 9 is **IX** (1 before 10)
-* 40 is **XL** (10 before 50) and 90 is **XC** (10 before 100)
-* 400 is **CD** (100 before 500) and 900 is **CM** (100 before 1000)
+Normally, symbols are added together from left to right (for example, 15 is **XV**, which is 10 + 5). However, if a smaller value comes before a larger value, it means subtraction:
+* 4 is **IV** (5 - 1)
+* 9 is **IX** (10 - 1)
+* 40 is **XL** (50 - 10)
+* 90 is **XC** (100 - 10)
+* 400 is **CD** (500 - 100)
+* 900 is **CM** (1000 - 100)
 
-**Example:**
-If the input is `3749`, we break it into digit places:
-* 3000 -> **MMM**
-* 700 -> **DCC**
-* 40 -> **XL**
-* 9 -> **IX**
+To convert any number, you break it down by place value (thousands, hundreds, tens, ones) and convert each part to Roman numerals.
 
-Putting them together gives `"MMMDCCXLIX"`.
+For example, 3749 breaks down into:
+* **3000** = MMM
+* **700** = DCC
+* **40** = XL
+* **9** = IX
+
+Putting them together gives **MMMDCCXLIX**.
 
 ---
 
 ## Intuition
 
-Every integer between 1 and 3999 can be split into four distinct place values: **thousands**, **hundreds**, **tens**, and **ones**.
+Because the input is capped at 3999, each decimal place can only be a digit from 0 to 9 (or 0 to 3 for thousands). 
 
-Since each place value only ever has a single digit (0 through 9), there are only a tiny, finite set of Roman patterns for each place. For instance, the ones place can only ever be one of ten options: `""`, `"I"`, `"II"`, `"III"`, `"IV"`, `"V"`, `"VI"`, `"VII"`, `"VIII"`, or `"IX"`.
+Instead of writing complex rules or loops to subtract values repeatedly, we can pre-build lookup tables for every single digit (0 through 9) at each place value (ones, tens, hundreds, thousands). 
 
-The "aha" moment is that we do not need complex conditional statements or loops to deal with subtraction rules. We can pre-build lookup tables for each digit position from 0 to 9. Then, we simply extract each digit using math (division and modulo) and grab the matching Roman string directly.
+Extracting each digit using simple division and modulo arithmetic lets us grab the matching Roman string fragment instantly.
 
 ---
 
 ## Approach
 
-* `string ones[] = {"","I","II","III","IV","V","VI","VII","VIII","IX"};` — Creates a lookup table for the ones digit (values 0 through 9). It directly embeds the special subtractive forms `"IV"` for 4 and `"IX"` for 9.
-* `string tens[] = {"","X","XX","XXX","XL","L","LX","LXX","LXXX","XC"};` — Creates a lookup table for the tens digit (values 0, 10, 20, ..., 90). It includes `"XL"` for 40 and `"XC"` for 90.
-* `string hrns[] = {"","C","CC","CCC","CD","D","DC","DCC","DCCC","CM"};` — Creates a lookup table for the hundreds digit (values 0, 100, 200, ..., 900). It includes `"CD"` for 400 and `"CM"` for 900.
-* `string ths[]={"","M","MM","MMM"};` — Creates a lookup table for the thousands digit (values 0, 1000, 2000, 3000). Since input goes up to 3999, index 3 (`"MMM"`) is the maximum needed.
-* `return ths[num/1000] + hrns[(num%1000)/100] + tens[(num%100)/10] + ones[num%10];` — Breaks down `num` into four single digits using integer arithmetic, looks up the corresponding Roman string for each position, concatenates them from left to right, and returns the result.
+Here is how the code works step-by-step:
+
+* `string ones[] = {"","I","II","III","IV","V","VI","VII","VIII","IX"};`  
+  Creates a lookup array for the ones place (digits 0 through 9). Index 0 is an empty string `""` so zero adds nothing to the output.
+
+* `string tens[] = {"","X","XX","XXX","XL","L","LX","LXX","LXXX","XC"};`  
+  Creates a lookup array for the tens place (0, 10, 20, ..., 90).
+
+* `string hrns[] = {"","C","CC","CCC","CD","D","DC","DCC","DCCC","CM"};`  
+  Creates a lookup array for the hundreds place (0, 100, 200, ..., 900).
+
+* `string ths[]={"","M","MM","MMM"};`  
+  Creates a lookup array for the thousands place (0, 1000, 2000, 3000).
+
+* `ths[num/1000]`  
+  Divides `num` by 1000 to get the thousands digit (0, 1, 2, or 3) and looks up its Roman representation.
+
+* `hrns[(num%1000)/100]`  
+  Uses the modulo operator `% 1000` to strip away the thousands digit, then divides by 100 to isolate the hundreds digit (0 through 9) and look it up.
+
+* `tens[(num%100)/10]`  
+  Uses `% 100` to remove the hundreds and thousands, then divides by 10 to extract the tens digit (0 through 9) for lookup.
+
+* `ones[num%10]`  
+  Uses `% 10` to isolate the final ones digit (0 through 9) and look it up.
+
+* `return ths[...] + hrns[...] + tens[...] + ones[...]`  
+  Concatenates the four Roman string pieces together from highest place value to lowest and returns the final string.
 
 ---
 
 ## Dry Run
 
-### Test Case 1: Standard case with subtractive forms (`num = 1994`)
+### Case 1: Standard number with subtractive forms (`num = 3749`)
 
-| `num` | `ths[num/1000]` | `hrns[(num%1000)/100]` | `tens[(num%100)/10]` | `ones[num%10]` | Action |
+| Step | Expression | Value Evaluated | Lookup Result | Combined Result | Action |
 | :--- | :--- | :--- | :--- | :--- | :--- |
-| `1994` | `ths[1]` -> `"M"` | — | — | — | Extract thousands digit: `1994 / 1000 = 1`. |
-| `1994` | `"M"` | `hrns[9]` -> `"CM"` | — | — | Extract hundreds digit: `(1994 % 1000) / 100 = 9`. |
-| `1994` | `"M"` | `"CM"` | `tens[9]` -> `"XC"` | — | Extract tens digit: `(1994 % 100) / 10 = 9`. |
-| `1994` | `"M"` | `"CM"` | `"XC"` | `ones[4]` -> `"IV"` | Extract ones digit: `1994 % 10 = 4`. |
-| `1994` | `"M"` | `"CM"` | `"XC"` | `"IV"` | Combine strings to get `"MCMXCIV"`. |
+| 1 | `num / 1000` | 3749 / 1000 = 3 | `ths[3]` = "MMM" | "MMM" | Extracted thousands place |
+| 2 | `(num % 1000) / 100` | 749 / 100 = 7 | `hrns[7]` = "DCC" | "MMMDCC" | Extracted hundreds place |
+| 3 | `(num % 100) / 10` | 49 / 10 = 4 | `tens[4]` = "XL" | "MMMDCCXL" | Extracted tens place |
+| 4 | `num % 10` | 3749 % 10 = 9 | `ones[9]` = "IX" | "MMMDCCXLIX" | Extracted ones place |
 
-### Test Case 2: Number with zero place values (`num = 58`)
+Final returned string: **"MMMDCCXLIX"**
 
-| `num` | `ths[num/1000]` | `hrns[(num%1000)/100]` | `tens[(num%100)/10]` | `ones[num%10]` | Action |
+---
+
+### Case 2: Number with subtractive forms (`num = 1994`)
+
+| Step | Expression | Value Evaluated | Lookup Result | Combined Result | Action |
 | :--- | :--- | :--- | :--- | :--- | :--- |
-| `58` | `ths[0]` -> `""` | — | — | — | Extract thousands digit: `58 / 1000 = 0`. |
-| `58` | `""` | `hrns[0]` -> `""` | — | — | Extract hundreds digit: `(58 % 1000) / 100 = 0`. |
-| `58` | `""` | `""` | `tens[5]` -> `"L"` | — | Extract tens digit: `(58 % 100) / 10 = 5`. |
-| `58` | `""` | `""` | `"L"` | `ones[8]` -> `"VIII"` | Extract ones digit: `58 % 10 = 8`. |
-| `58` | `""` | `""` | `"L"` | `"VIII"` | Combine strings to get `"LVIII"`. |
+| 1 | `num / 1000` | 1994 / 1000 = 1 | `ths[1]` = "M" | "M" | Extracted thousands place |
+| 2 | `(num % 1000) / 100` | 994 / 100 = 9 | `hrns[9]` = "CM" | "MCM" | Extracted hundreds place |
+| 3 | `(num % 100) / 10` | 94 / 10 = 9 | `tens[9]` = "XC" | "MCMXC" | Extracted tens place |
+| 4 | `num % 10` | 1994 % 10 = 4 | `ones[4]` = "IV" | "MCMXCIV" | Extracted ones place |
+
+Final returned string: **"MCMXCIV"**
 
 ---
 
 ## Time & Space Complexity
 
-* **Time Complexity:** **O(1)** — The operations consist of basic arithmetic (four division/modulo steps) and four constant-time array lookups. The execution steps are fixed regardless of how large `num` is.
-* **Space Complexity:** **O(1)** — The lookup arrays (`ones`, `tens`, `hrns`, `ths`) store a fixed total of 33 short strings. Memory usage is constant and does not grow.
+* **Time Complexity:** O(1) — The algorithm performs a fixed number of arithmetic operations (4 divisions/modulos) and array lookups regardless of how large `num` is.
+* **Space Complexity:** O(1) — The four lookup arrays hold a constant number of small strings (34 string elements total), taking a fixed amount of memory.
 
-**Is this optimal?**
-Yes, this code is fully optimal. The maximum possible integer is bounded at 3999, meaning the input size is strictly constrained. Because both runtime and extra space execute in a constant number of operations, this approach achieves theoretical optimal bounds of **O(1) Time** and **O(1) Space**. No further algorithmic improvements are possible.
+### Is this solution optimal?
+**Yes, this is already optimal.** Both time and space complexities are O(1), which is the theoretical best possible performance because the input size is capped at 3999. No further optimizations can improve upon constant time and space.
 
 ---
 
 ## Edge Cases Handled
 
-* **Minimum Constraint Value (`num = 1`):** Thousands, hundreds, and tens digits evaluate to 0 (`""`), mapping correctly to output `"I"`.
-* **Maximum Constraint Value (`num = 3999`):** Uses the upper boundary of the `ths` array (`ths[3]` = `"MMM"`) along with maxed-out lower places to yield `"MMMCMXCIX"`.
-* **Numbers with Zeros in Middle/End (`num = 1000` or `num = 104`):** Zero digits evaluate to index `0` in their respective arrays, returning empty strings (`""`) without adding unwanted characters.
-* **All Subtractive Combinations (4, 9, 40, 90, 400, 900):** Subtractive rule combinations are pre-written into the string lookup arrays, completely avoiding special branching logic or invalid consecutive repetitions.
+* **Minimum Constraint (`num = 1`)**: Thousands, hundreds, and tens return `0` (mapping to `""`), while ones returns `"I"`. The result correctly yields `"I"`.
+* **Maximum Constraint (`num = 3999`)**: Thousands digit is 3 (`"MMM"`), which is safely within the bounds of `ths`. The result yields `"MMMCMXCIX"`.
+* **Zeroes in place values (e.g., `num = 1004`)**: Middle digits evaluate to index `0`, mapping to `""`. The expression computes `"M" + "" + "" + "IV"`, producing `"MIV"` cleanly.
+* **Subtractive cases (digits 4 and 9)**: Subtractive strings like `"IV"`, `"IX"`, `"XL"`, `"XC"`, `"CD"`, and `"CM"` are explicitly defined in the lookup arrays, eliminating special branching logic.
