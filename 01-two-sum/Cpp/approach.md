@@ -5,41 +5,46 @@
 
 ## Problem Explained
 
-You are given a list of integers called `nums` and a single goal integer called `target`. Your task is to find two different numbers in `nums` that add up to `target`. 
+You are given a list of numbers called `nums` and a goal number called `target`. Your job is to find two different numbers in `nums` that add up to `target`, and return their position numbers (indices) in the list.
 
-Once you find them, you must return their position numbers (their 0-based indices) as a pair.
+You can assume that every input has **exactly one correct pair**, and you cannot use the exact same position twice. You can return the two index numbers in any order.
 
-- You cannot use the exact same element twice (meaning you cannot pick the number at index 0 and add it to itself).
-- Every input is guaranteed to have exactly one valid answer.
-- You can return the two indices in any order.
-
-**Example:**
-If `nums = [2, 7, 11, 15]` and `target = 9`:
-- `nums[0]` is `2`
-- `nums[1]` is `7`
-- `2 + 7 = 9`, which equals `target`.
-- Output: `[0, 1]`
+For example, if `nums = [2, 7, 11, 15]` and `target = 9`:
+- Look at index `0` (value `2`) and index `1` (value `7`).
+- Their sum is `2 + 7 = 9`.
+- The answer is `[0, 1]`.
 
 ---
 
 ## Intuition
 
-The direct way to solve this is to test every possible pair of numbers until you find the right sum. 
+The standard brute-force idea is to test every possible pair of numbers until you find the right sum. 
 
-Imagine holding the first number in your hand. You then look at every other number in the list one by one to see if they add up to `target`. If none work, you move to the second number and check all remaining numbers after it. You keep repeating this process until you find the matching pair.
+Imagine standing in front of a row of boxed items. You pick up the first box, keep hold of it, and then check it against every other box down the line one by one. If none of those pair up to make the goal sum, you put the first box down, pick up the second box, and repeat the process for all remaining boxes. As soon as a match is found, you stop and return their positions.
 
 ---
 
 ## Approach
 
-Here is how the code works step-by-step:
+Here is how the provided code works step-by-step:
 
-- `int n = nums.size();`: Measures how many total numbers are in `nums` and stores that count in `n`.
-- `for( int i=0 ; i<n-1 ; i++ )`: Starts an outer loop picking the first candidate index `i`. It runs from `0` up to the second-to-last index `n - 2`.
-- `for( int j=i+1 ; j<n ; j++ )`: Starts an inner loop picking the second candidate index `j`. It always begins at `i + 1` so that we never check a number against itself or repeat previously tested pairs.
-- `if( nums[i]+nums[j] == target )`: Adds the value at index `i` (`nums[i]`) to the value at index `j` (`nums[j]`) and checks if their total matches `target`.
-- `return {i,j};`: Immediately stops the function and returns the indices `{i, j}` as soon as a matching pair is found.
-- `return {};`: Returns an empty list as a fallback if no pair is found (this line is never reached based on problem constraints).
+* `int n = nums.size();`  
+  This calculates the total number of elements in `nums` and stores it in variable `n`.
+
+* `for( int i=0 ; i<n-1 ; i++ ){`  
+  This outer loop picks the first number's index, starting at index `0` and going up to the second-to-last element (`n-2`).
+
+* `for( int j=i+1 ; j<n ; j++ ){`  
+  This inner loop picks the second number's index, starting immediately after `i` (`j = i + 1`) and checking every remaining element up to the end of the array. Starting at `i + 1` ensures we do not compare a number with itself or re-check pairs we already looked at.
+
+* `if( nums[i]+nums[j] == target ){`  
+  This checks whether the sum of the element at index `i` and the element at index `j` matches `target`.
+
+* `return {i,j};`  
+  If the sum equals `target`, the code immediately returns a vector with indices `i` and `j`.
+
+* `return {};`  
+  This acts as a fallback to return an empty array if no pair is found (though the problem guarantees a valid answer always exists).
 
 ---
 
@@ -47,69 +52,82 @@ Here is how the code works step-by-step:
 
 ### Case 1: Typical case (`nums = [2, 7, 11, 15]`, `target = 9`)
 
-| Step | `i` | `j` | `nums[i]` | `nums[j]` | `nums[i] + nums[j]` | Action |
-| :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| 1 | 0 | 1 | 2 | 7 | 9 | Sum matches `target`. Return `{0, 1}`. |
+| `i` | `j` | `nums[i]` | `nums[j]` | `nums[i] + nums[j]` | Action |
+|---|---|---|---|---|---|
+| `0` | `1` | `2` | `7` | `9` | Matches `target` (9). Returns `{0, 1}` immediately. |
 
 ---
 
-### Case 2: Edge case with duplicate values (`nums = [3, 3]`, `target = 6`)
+### Case 2: Matching pair later in array (`nums = [3, 2, 4]`, `target = 6`)
 
-| Step | `i` | `j` | `nums[i]` | `nums[j]` | `nums[i] + nums[j]` | Action |
-| :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| 1 | 0 | 1 | 3 | 3 | 6 | Sum matches `target`. Return `{0, 1}`. |
+| `i` | `j` | `nums[i]` | `nums[j]` | `nums[i] + nums[j]` | Action |
+|---|---|---|---|---|---|
+| `0` | `1` | `3` | `2` | `5` | No match. Increment `j`. |
+| `0` | `2` | `3` | `4` | `7` | No match. Inner loop finishes. Increment `i`. |
+| `1` | `2` | `2` | `4` | `6` | Matches `target` (6). Returns `{1, 2}`. |
 
 ---
 
 ## Time & Space Complexity
 
-- **Time Complexity:** **O(n^2)** — The code uses two nested loops. In the worst case, it compares almost every pair. For `n` elements, it does roughly `(n * (n - 1)) / 2` operations, which simplifies to `O(n^2)`.
-- **Space Complexity:** **O(1)** — No extra data structures are created. Memory usage stays constant regardless of how large `nums` gets.
+* **Time Complexity:** **O(n^2)**  
+  The code uses two nested loops. In the worst case, it compares almost every element with every other element, taking about `(n * (n - 1)) / 2` steps.
+
+* **Space Complexity:** **O(1)**  
+  The code uses a constant amount of extra memory regardless of how large `nums` is.
+
+---
 
 ### Can this be improved?
 
-**Yes.** We can improve the time complexity to **O(n)** by trading some memory space.
+**Yes.** We can reduce the time complexity to **O(n)** using a **hash map** (an `unordered_map` in C++).
 
-Instead of checking all pairs with two loops, we can use a **hash table** (an `unordered_map` in C++), which stores key-value pairs for fast lookup.
+#### Why and how the improvement works:
+Instead of running a second loop to search for the matching number, we can remember numbers we have already seen. 
 
-**How the logic works:**
-For any number `x`, the value needed to reach `target` is `target - x` (we call this the **complement**). 
-As we walk through `nums` once:
-1. Calculate `complement = target - nums[i]`.
-2. Check if `complement` is already stored in our hash map.
-3. If it is in the map, we instantly get its index and return it along with `i`.
-4. If it is not in the map, store the current number `nums[i]` and its index `i` into the map, then move to the next number.
+For any number `curr` at index `i`, its required pair is `complement = target - curr`. 
 
-**Key changed lines:**
+As we iterate through the list once:
+1. We check if `complement` is already in our map of seen numbers.
+2. If it is present, we immediately have both indices: the stored index of `complement` and the current index `i`.
+3. If it is not present, we put `curr` and its index `i` into our map so future numbers can find it.
+
+Because looking up an item in a hash map takes **O(1)** average time, we only need a single pass through the array.
+
+#### Code Snippet for the Optimized Approach:
 
 ```cpp
-unordered_map<int, int> seen; // Stores value -> index
-
-for (int i = 0; i < nums.size(); i++) {
-    int complement = target - nums[i]; // The number we need
-    
-    if (seen.count(complement)) {
-        return {seen[complement], i}; // Found the pair
+class Solution {
+public:
+    vector<int> twoSum(vector<int>& nums, int target) {
+        unordered_map<int, int> seen; // Stores value -> index
+        
+        for (int i = 0; i < nums.size(); i++) {
+            int complement = target - nums[i];
+            
+            // Check if required complement was already seen
+            if (seen.count(complement)) {
+                return {seen[complement], i};
+            }
+            
+            // Store current number and its index
+            seen[nums[i]] = i;
+        }
+        
+        return {};
     }
-    
-    seen[nums[i]] = i; // Save current number and index for future checks
-}
+};
 ```
 
-- `unordered_map<int, int> seen;`: Creates a hash map mapping values to their array index.
-- `int complement = target - nums[i];`: Calculates the exact value needed to reach `target`.
-- `seen.count(complement)`: Checks if the needed value was seen previously in constant time `O(1)`.
-
-**Resulting improved complexity:**
-- **Time Complexity:** **O(n)** — We loop through `nums` only once, performing fast `O(1)` map lookups.
-- **Space Complexity:** **O(n)** — In the worst case, we store up to `n` elements in the hash table.
-
-**Theoretical best possible:** **O(n)** time complexity, because every element must be inspected at least once. The improved hash map version achieves this theoretical limit.
+* **Improved Time Complexity:** **O(n)** — We traverse the list once, and map operations take **O(1)** average time.
+* **Improved Space Complexity:** **O(n)** — The map stores up to `n` elements in memory.
+* **Theoretical Best:** **O(n)** time is optimal because every element must be inspected at least once to find the solution. The hash map approach achieves this theoretical limit.
 
 ---
 
 ## Edge Cases Handled
 
-- **Duplicate Values:** Handled correctly (e.g., `nums = [3, 3]`, `target = 6`). Because the inner loop starts at `j = i + 1`, the code safely compares index 0 and index 1 without comparing an index against itself.
-- **Negative Numbers:** Works smoothly (e.g., `nums = [-3, 4, 3]`, `target = 0`). Standard integer addition handles negative values automatically.
-- **Minimum Array Size:** Works for arrays with only two elements (`nums.length == 2`). The loops run exactly once (`i = 0`, `j = 1`) and return the answer without out-of-bounds errors.
+* **Minimum Array Size (`nums.length = 2`):** Works correctly. The outer loop runs for `i = 0`, and the inner loop runs for `j = 1`.
+* **Duplicate Values (`nums = [3, 3]`, `target = 6`):** Works correctly. The inner loop starts at `j = i + 1`, so identical values at different positions are treated as distinct elements.
+* **Negative Numbers (`nums = [-3, 4, 3]`, `target = 0`):** Works correctly because standard arithmetic handles negative values seamlessly.
+* **Large Numbers:** Standard integer calculations run safely within integer limits.
