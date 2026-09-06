@@ -5,99 +5,90 @@
 
 ## Problem Explained
 
-You are given an array of integers named `nums` that is already sorted in order from smallest to largest. Some of the numbers in this list appear more than once.
+You are given a list of integers called `nums` that is already sorted from smallest to largest. Some numbers might appear more than once.
 
-Your task is to modify the array **in-place** (meaning you must alter the original array directly without creating a new copy) so that every unique number appears only once at the beginning of the array. The original sorted order of these unique numbers must be preserved.
+Your task is to remove all duplicate numbers so that each unique number appears only once. You must do this **in-place**, which means you cannot create a new array or copy of the list. You must modify the existing array directly.
 
-After placing all unique numbers at the front, you return `k`, which is the total count of unique numbers. Anything in the array located after index `k - 1` does not matter and can be ignored.
+After removing duplicates:
+- The unique numbers must stay at the very front of the array in their original sorted order.
+- You must return `k`, which is the total count of unique numbers.
+- Anything left in the array beyond the first `k` elements does not matter.
 
-For example, if `nums = [1, 1, 2]`:
-* The unique values are `1` and `2`.
-* You rearrange `nums` so the first two elements are `[1, 2]`.
-* You return `k = 2`.
+**Example:**
+If `nums = [1, 1, 2]`, there are 2 unique numbers: `1` and `2`. You update `nums` so its first two spots are `[1, 2]`, and return `k = 2`.
 
 ---
 
 ## Intuition
 
-Because the list is already sorted, identical numbers are always grouped right next to each other. You do not need to look across the whole array to find duplicates; you only need to look at adjacent values.
+Because the array is already **sorted**, all duplicate values sit right next to each other. 
 
-To solve this in one pass, you use two markers called **pointers**:
-* **Slow pointer (`i`):** Marks the location of the last unique value you have locked in place.
-* **Fast pointer (`j`):** Scans forward through the list looking for the next unique number.
+We can solve this using the **Two Pointers** technique. Imagine two readers pointing at the list:
+1. **Slow pointer (`i`)**: Keeps track of where the last known unique element is stored.
+2. **Fast pointer (`j`)**: Scans ahead through the array to discover new, unseen numbers.
 
-Whenever the fast pointer `j` finds a value that is different from the unique value at `i`, you move `i` forward one spot and place the newly found value there. If `j` sees a duplicate value, it simply skips over it.
+Whenever the fast pointer `j` finds a number that is different from the number at `i`, we know we found a brand new unique value! We then increment `i` to move to the next available spot and place the new value there.
 
 ---
 
 ## Approach
 
-Here is how the code executes step-by-step:
+Here is step-by-step how the code executes the two-pointer idea:
 
-* `int i=0,j=1;` — Initialize pointer `i` at index `0` (the first element is always unique) and pointer `j` at index `1` (to start scanning for new values).
-* `while( j< nums.size())` — Start a loop that runs until `j` reaches the end of the array.
-* `if( nums[i] != nums[j])` — Compare the last confirmed unique value at `nums[i]` with the current scanned value at `nums[j]`.
-* `swap( nums[++i],nums[j++]);` — If the values are different, pre-increment `i` (`++i`) to move to the next empty unique slot, swap the new value at index `j` into index `i`, and post-increment `j` (`j++`) to continue scanning.
-* `else` — If `nums[i]` is equal to `nums[j]`, the value at `j` is a duplicate.
-* `j++;` — Increment `j` by `1` to skip the duplicate without moving `i`.
-* `return i+1;` — Once the loop finishes, return `i + 1`. Since `i` is a zero-based index, `i + 1` represents the count `k` of unique elements found.
+- `int i=0,j=1;`: We initialize `i` at index 0 because the very first element is always unique. We initialize `j` at index 1 to start searching for the next unique element.
+- `while( j< nums.size())`: We start a loop that runs until `j` reaches the end of the array.
+- `if( nums[i] != nums[j])`: We check if the element at `j` is different from the element at `i`.
+- `swap( nums[++i],nums[j++]);`: If they are different, we increment `i` first (`++i`) to target the next spot, swap the new value at `j` into that spot, and then increment `j` (`j++`) to keep scanning forward.
+- `else`: If `nums[i]` and `nums[j]` are equal, `nums[j]` is a duplicate.
+- `j++;`: We skip the duplicate by moving `j` one index forward without moving `i`.
+- `return i+1;`: When the loop finishes, `i` is the index of the last unique element. Since indices start at 0, the total count of unique elements `k` is `i + 1`.
 
 ---
 
 ## Dry Run
 
-### Case 1: Short array with one duplicate (`nums = [1, 1, 2]`)
+### Example 1: `nums = [1, 1, 2]`
 
-| `i` | `j` | `nums` | Action |
-|---|---|---|---|
-| 0 | 1 | `[1, 1, 2]` | `nums[0]` (1) equals `nums[1]` (1). Duplicate found. Increment `j` to 2. |
-| 0 | 2 | `[1, 1, 2]` | `nums[0]` (1) != `nums[2]` (2). New unique found! `++i` becomes 1. Swap `nums[1]` and `nums[2]`. `j` becomes 3. |
-| 1 | 3 | `[1, 2, 1]` | `j` reached `nums.size()` (3). Loop ends. Return `i + 1` = 2. |
+| Step | `i` | `j` | `nums[i]` | `nums[j]` | Action | `nums` state |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| Start | 0 | 1 | 1 | 1 | Elements match (`nums[0] == nums[1]`). Skip duplicate. | `[1, 1, 2]` |
+| 1 | 0 | 2 | 1 | 2 | Different (`1 != 2`). Increment `i` to 1, swap `nums[1]` & `nums[2]`, increment `j` to 3. | `[1, 2, 1]` |
+| End | 1 | 3 | - | - | Loop terminates (`j == 3`). Return `i + 1 = 2`. | `[1, 2, 1]` |
 
 ---
 
-### Case 2: Longer array with multiple duplicates (`nums = [0, 0, 1, 1, 1, 2, 2, 3, 3, 4]`)
+### Example 2: `nums = [0, 0, 1, 1, 1, 2, 2, 3, 3, 4]`
 
-| `i` | `j` | `nums` | Action |
-|---|---|---|---|
-| 0 | 1 | `[0, 0, 1, 1, 1, 2, 2, 3, 3, 4]` | `nums[0]` (0) == `nums[1]` (0). Duplicate. Increment `j` to 2. |
-| 0 | 2 | `[0, 0, 1, 1, 1, 2, 2, 3, 3, 4]` | `nums[0]` (0) != `nums[2]` (1). Unique found! Swap `nums[1]` and `nums[2]`. `i` becomes 1, `j` becomes 3. |
-| 1 | 3 | `[0, 1, 0, 1, 1, 2, 2, 3, 3, 4]` | `nums[1]` (1) == `nums[3]` (1). Duplicate. Increment `j` to 4. |
-| 1 | 4 | `[0, 1, 0, 1, 1, 2, 2, 3, 3, 4]` | `nums[1]` (1) == `nums[4]` (1). Duplicate. Increment `j` to 5. |
-| 1 | 5 | `[0, 1, 0, 1, 1, 2, 2, 3, 3, 4]` | `nums[1]` (1) != `nums[5]` (2). Unique found! Swap `nums[2]` and `nums[5]`. `i` becomes 2, `j` becomes 6. |
-| 2 | 6 | `[0, 1, 2, 1, 1, 0, 2, 3, 3, 4]` | `nums[2]` (2) == `nums[6]` (2). Duplicate. Increment `j` to 7. |
-| 2 | 7 | `[0, 1, 2, 1, 1, 0, 2, 3, 3, 4]` | `nums[2]` (2) != `nums[7]` (3). Unique found! Swap `nums[3]` and `nums[7]`. `i` becomes 3, `j` becomes 8. |
-| 3 | 8 | `[0, 1, 2, 3, 1, 0, 2, 2, 3, 4]` | `nums[3]` (3) == `nums[8]` (3). Duplicate. Increment `j` to 9. |
-| 3 | 9 | `[0, 1, 2, 3, 1, 0, 2, 2, 3, 4]` | `nums[3]` (3) != `nums[9]` (4). Unique found! Swap `nums[4]` and `nums[9]`. `i` becomes 4, `j` becomes 10. |
-| 4 | 10 | `[0, 1, 2, 3, 4, 0, 2, 2, 3, 1]` | `j` reached `nums.size()` (10). Loop ends. Return `i + 1` = 5. |
+| Step | `i` | `j` | `nums[i]` | `nums[j]` | Action | `nums` state |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| Start | 0 | 1 | 0 | 0 | Match. `j++`. | `[0, 0, 1, 1, 1, 2, 2, 3, 3, 4]` |
+| 1 | 0 | 2 | 0 | 1 | Different. Increment `i` to 1, swap `nums[1]` & `nums[2]`, `j++`. | `[0, 1, 0, 1, 1, 2, 2, 3, 3, 4]` |
+| 2 | 1 | 3 | 1 | 1 | Match. `j++`. | `[0, 1, 0, 1, 1, 2, 2, 3, 3, 4]` |
+| 3 | 1 | 4 | 1 | 1 | Match. `j++`. | `[0, 1, 0, 1, 1, 2, 2, 3, 3, 4]` |
+| 4 | 1 | 5 | 1 | 2 | Different. Increment `i` to 2, swap `nums[2]` & `nums[5]`, `j++`. | `[0, 1, 2, 1, 1, 0, 2, 3, 3, 4]` |
+| 5 | 2 | 6 | 2 | 2 | Match. `j++`. | `[0, 1, 2, 1, 1, 0, 2, 3, 3, 4]` |
+| 6 | 2 | 7 | 2 | 3 | Different. Increment `i` to 3, swap `nums[3]` & `nums[7]`, `j++`. | `[0, 1, 2, 3, 1, 0, 2, 1, 3, 4]` |
+| 7 | 3 | 8 | 3 | 3 | Match. `j++`. | `[0, 1, 2, 3, 1, 0, 2, 1, 3, 4]` |
+| 8 | 3 | 9 | 3 | 4 | Different. Increment `i` to 4, swap `nums[4]` & `nums[9]`, `j++`. | `[0, 1, 2, 3, 4, 0, 2, 1, 3, 1]` |
+| End | 4 | 10 | - | - | Loop terminates (`j == 10`). Return `i + 1 = 5`. | `[0, 1, 2, 3, 4, ...]` |
 
 ---
 
 ## Time & Space Complexity
 
-* **Time Complexity:** **O(N)** — where N is the length of the `nums` array. Pointer `j` moves forward by 1 step in every iteration and inspects each element exactly once.
-* **Space Complexity:** **O(1)** — Memory usage is constant because modifications are performed in-place using only two integer pointers (`i` and `j`).
+- **Time Complexity:** **O(N)** — where N is the length of the `nums` array. The fast pointer `j` travels through the array from start to end exactly once.
+- **Space Complexity:** **O(1)** — Memory usage is constant because we modify the input array directly and only store two integer pointers (`i` and `j`).
 
-### Can it be improved?
-
-The time complexity **O(N)** and space complexity **O(1)** are already theoretically optimal. We must look at every number at least once to identify duplicates, and modifying the array in-place uses minimum possible space.
-
-However, a small micro-optimization can be made to improve real-world CPU speed. Instead of swapping values (`swap(nums[++i], nums[j++])`), we can directly overwrite the value (`nums[++i] = nums[j++]`). Swapping performs three memory operations (read, write, write), while direct assignment performs only two (read, write).
-
-```cpp
-if (nums[i] != nums[j]) {
-    nums[++i] = nums[j++];
-}
-```
-
-* **Resulting Complexity:** **O(N)** Time, **O(1)** Space.
-* **Theoretical Best Possible:** **O(N)** Time, **O(1)** Space. The current approach already achieves this theoretical limit.
+### Is this optimal?
+**Yes, this is optimal.**
+- **Time:** We must examine every element at least once to determine if it is a duplicate, so lower than O(N) time is impossible.
+- **Space:** The problem requires modifying the array in-place, so O(1) extra space is the absolute best possible limit.
 
 ---
 
 ## Edge Cases Handled
 
-* **Single Element Array (`nums = [1]`):** The loop condition `j < nums.size()` evaluates to `1 < 1` (false), skipping the loop entirely. It correctly returns `i + 1 = 1`.
-* **No Duplicates (`nums = [1, 2, 3]`):** Pointer `j` steps through every index, updating `i` on every step. The array remains unchanged and returns `3`.
-* **All Duplicate Elements (`nums = [1, 1, 1, 1]`):** Pointer `j` scans to the end without ever updating `i`. The function correctly returns `1`.
-* **Negative Numbers (`nums = [-10, -10, -5, 0]`):** Relational check `nums[i] != nums[j]` handles signed integer values naturally without issues.
+- **Array with length 1 (e.g., `nums = [7]`):** The loop condition `j < nums.size()` (1 < 1) evaluates to false immediately. The function returns `i + 1 = 1`, which is correct.
+- **Array with all identical values (e.g., `nums = [2, 2, 2, 2]`):** The condition `nums[i] != nums[j]` is never met. Pointer `j` moves to the end while `i` stays at 0. The function returns `1`, leaving `2` as the only unique element.
+- **Array with no duplicates (e.g., `nums = [1, 2, 3, 4]`):** Every step finds a different number. Pointer `i` advances on every iteration, and the function returns the full array length.
+- **Negative numbers (e.g., `nums = [-10, -10, -3, 0, 5]`):** The equality checks (`!=`) compare integer values directly, so negative numbers work smoothly without any special handling.
