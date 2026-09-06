@@ -1,88 +1,78 @@
 ![Runtime](https://img.shields.io/badge/Runtime-0%20ms%20(beats%20100.00%25)-brightgreen?style=for-the-badge)
-![Memory](https://img.shields.io/badge/Memory-8.4%20MB%20(beats%2092.06%25)-brightgreen?style=for-the-badge)
+![Memory](https://img.shields.io/badge/Memory-8.4%20MB%20(beats%2092.04%25)-brightgreen?style=for-the-badge)
 
 ---
 
 ## Problem Explained
 
-A palindrome is a word or number that reads the exact same backward as it does forward. 
-
-This problem asks us to take an integer `x` and decide if it is a palindrome. If it is, we return `true`. If it is not, we return `false`.
+The problem asks us to determine if a given integer reads the same backward as forward. If it does, we return `true`. If it does not, we return `false`.
 
 For example:
-* `121` is a palindrome because reversing it still gives `121`.
-* `-121` is **not** a palindrome because reading it backward gives `121-` (the minus sign moves to the end).
-* `10` is **not** a palindrome because reading it backward gives `01`.
+* `121` read backward is `121`. This matches, so the answer is `true`.
+* `10` read backward is `01` (or `1`). This does not match `10`, so the answer is `false`.
+* `-121` read backward is `121-` because of the negative sign. This does not match, so the answer is `false`.
 
 ## Intuition
 
-The simplest way to check if a number is a palindrome is to build its reverse and compare it to the original number.
+To check if a number is a palindrome without turning it into a string, we can build its reverse mathematically. 
 
-To reverse a number mathematically without converting it to a string:
-1. Grab the last digit using modulo (`x % 10`).
-2. Append that digit to our growing reversed number.
-3. Remove the last digit from the original number using integer division (`x / 10`).
-4. Repeat this until the original number becomes zero.
+We can extract the last digit of a number by taking its remainder when divided by 10 (`x % 10`). We can then add this digit to a running total for the reversed number. To make room for the next digit, we multiply our running total by 10. Finally, we chop off the last digit of our original number by dividing it by 10 (`x /= 10`).
 
-If the fully reversed number equals the original starting number, it is a palindrome.
+Once we reverse the entire number, we compare it to our original number. If they are identical, the original number was a palindrome.
 
 ## Approach
 
-Here is how the code works, step-by-step:
+Here is the step-by-step breakdown of how the code works:
 
-* `if( x < 0)`: Checks if the number is negative. If it is, the code immediately returns `false` because a negative sign at the front cannot exist at the back.
-* `long n = x;`: Saves a backup copy of `x` into `n`. We need this because our loop will modify and shrink `x` down to `0`. We use `long` to avoid potential overflow issues.
-* `long rev = 0;`: Creates a variable named `rev` to hold our reversed number, starting at `0`.
-* `while ( x != 0)`: Starts a loop that runs as long as `x` still has digits left to process.
-* `rev = rev * 10 + x % 10;`: Takes the last digit of `x` using `x % 10`. Shifts all existing digits in `rev` one place to the left by multiplying by `10`, then adds the new digit.
-* `x /= 10;`: Removes the last digit from `x` by dividing it by `10`.
-* `if( rev == n )`: Compares our reconstructed reversed number (`rev`) with the saved original number (`n`).
-* `return true;` / `return false;`: Returns `true` if they are identical, otherwise returns `false`.
+* `if( x < 0){ return false; }`: Checks if the number is negative. Negative numbers always have a minus sign at the front, which ends up at the back when reversed. Therefore, negative numbers can never be palindromes.
+* `long n = x;`: Creates a backup copy of `x` stored in `n`. We use a 64-bit integer type (`long`) to avoid memory overflow issues later, because reversing a large 32-bit integer might create a number too big for a normal `int`.
+* `long rev = 0 ;`: Sets up a variable `rev` (also as a 64-bit integer) initialized to `0`. This will store the reversed version of the number as we build it.
+* `while ( x != 0){`: Starts a loop that runs until every digit has been stripped from `x`.
+* `rev = rev * 10 + x % 10;`: Gets the last digit of `x` using `x % 10`, shifts the current digits in `rev` one position to the left by multiplying by `10`, and appends the extracted digit.
+* `x /= 10;`: Removes the last digit from `x` using integer division by 10.
+* `if( rev == n ){ return true; } else{ return false; }`: Compares the fully reversed number `rev` with the saved original number `n`. If they are equal, it returns `true`; otherwise, it returns `false`.
 
 ## Dry Run
 
-### Case 1: `x = 121` (Typical palindrome)
+### Case 1: Typical palindrome (`x = 121`)
 
 | Step | `x` | `n` | `rev` | Action |
 | :--- | :--- | :--- | :--- | :--- |
-| Start | `121` | `121` | `0` | `x > 0`, enter loop |
-| Loop 1 | `12` | `121` | `1` | Extract `1`, add to `rev`, drop `1` from `x` |
-| Loop 2 | `1` | `121` | `12` | Extract `2`, add to `rev`, drop `2` from `x` |
-| Loop 3 | `0` | `121` | `121` | Extract `1`, add to `rev`, drop `1` from `x` |
-| End | `0` | `121` | `121` | Loop ends (`x == 0`). `rev == n` is `true`. Return `true`. |
+| Start | `121` | `121` | `0` | Check `x < 0` (false). Copy `x` to `n`. Initialize `rev = 0`. |
+| Loop 1 | `12` | `121` | `1` | `rev = 0 * 10 + 121 % 10 = 1`. Drop last digit: `x = 121 / 10 = 12`. |
+| Loop 2 | `1` | `121` | `12` | `rev = 1 * 10 + 12 % 10 = 12`. Drop last digit: `x = 12 / 10 = 1`. |
+| Loop 3 | `0` | `121` | `121` | `rev = 12 * 10 + 1 % 10 = 121`. Drop last digit: `x = 1 / 10 = 0`. |
+| End | `0` | `121` | `121` | Loop ends because `x == 0`. Compare `rev == n` (`121 == 121`), which is true. Return `true`. |
 
-### Case 2: `x = 10` (Non-palindrome ending in zero)
+### Case 2: Number ending in zero (`x = 10`)
 
 | Step | `x` | `n` | `rev` | Action |
 | :--- | :--- | :--- | :--- | :--- |
-| Start | `10` | `10` | `0` | `x > 0`, enter loop |
-| Loop 1 | `1` | `10` | `0` | Extract `0`, `rev` stays `0`, drop `0` from `x` |
-| Loop 2 | `0` | `10` | `1` | Extract `1`, `rev` becomes `1`, drop `1` from `x` |
-| End | `0` | `10` | `1` | Loop ends (`x == 0`). `rev (1) == n (10)` is `false`. Return `false`. |
+| Start | `10` | `10` | `0` | Check `x < 0` (false). Copy `x` to `n`. Initialize `rev = 0`. |
+| Loop 1 | `1` | `10` | `0` | `rev = 0 * 10 + 10 % 10 = 0`. Drop last digit: `x = 10 / 10 = 1`. |
+| Loop 2 | `0` | `10` | `1` | `rev = 0 * 10 + 1 % 10 = 1`. Drop last digit: `x = 1 / 10 = 0`. |
+| End | `0` | `10` | `1` | Loop ends because `x == 0`. Compare `rev == n` (`1 == 10`), which is false. Return `false`. |
 
 ## Time & Space Complexity
 
-* **Time Complexity:** **O(log10(x))** — The number of iterations depends on the number of digits in `x`. Dividing a number by 10 at each step takes logarithmic time relative to its value.
-* **Space Complexity:** **O(1)** — We only use a few basic variables (`n`, `rev`), taking constant memory.
+* **Time Complexity:** **O(log10(x))** — In each iteration of the loop, we divide `x` by 10. The number of steps is equal to the total number of digits in `x`, which is roughly log base 10 of `x`.
+* **Space Complexity:** **O(1)** — We only use two extra 64-bit variables (`n` and `rev`). The memory used does not grow with the input size.
 
-### Optimization Potential
+### Can this be improved?
 
-Can we make this even better?
+The overall time and space complexity are already optimal, but the implementation itself can be improved. 
 
-Yes! The current code reverses the entire number and relies on a 64-bit `long` to prevent integer overflow. We can optimize this by **reversing only half of the number**.
+Right now, the code reverses the **entire** number, which requires using a 64-bit integer (`long`) to prevent memory overflow. We can optimize this by reversing **only half** of the number. 
 
-#### How Half-Reversal Works:
-1. If a number ends in `0` (like `10` or `120`), it cannot be a palindrome unless the number itself is `0`. We can reject these immediately.
-2. We move digits from `x` into `rev` one by one.
-3. When `x <= rev`, we have reached or passed the middle of the number!
-4. For even-length numbers (like `1221`), `x` will equal `rev` (`12 == 12`).
-5. For odd-length numbers (like `12321`), `x` will equal `rev / 10` (`12 == 123 / 10` which is `12`), because the middle digit does not matter.
+If we reverse digits until the reversed number becomes greater than or equal to the remaining original number, we know we have reached the midpoint. This avoids overflow completely, removes the need for `long`, cuts the number of loop steps in half, and allows us to rule out numbers ending in 0 immediately (except 0 itself).
 
-This eliminates the need for `long` entirely and runs in half the iterations.
+Here is the key optimization:
 
 ```cpp
-// Optimized snippet
-if (x < 0 || (x % 10 == 0 && x != 0)) return false;
+// Negative numbers, or non-zero numbers ending in 0, cannot be palindromes
+if (x < 0 || (x % 10 == 0 && x != 0)) {
+    return false;
+}
 
 int rev = 0;
 while (x > rev) {
@@ -90,21 +80,17 @@ while (x > rev) {
     x /= 10;
 }
 
+// For even length numbers: x == rev (e.g. 1221 becomes x = 12, rev = 12)
+// For odd length numbers: x == rev / 10 (e.g. 12321 becomes x = 12, rev = 123, discard middle digit)
 return x == rev || x == rev / 10;
 ```
 
-* Line 2 checks for negative numbers and non-zero numbers ending in zero.
-* The loop stops right at the middle point when `x` is no longer greater than `rev`.
-* Line 9 checks both even-length (`x == rev`) and odd-length (`x == rev / 10`) matches.
-
-* **Improved Time Complexity:** **O(log10(x))** — Still logarithmic, but processes half as many digits.
-* **Improved Space Complexity:** **O(1)** — Still constant space, but uses standard 32-bit `int` instead of `long`.
-* **Theoretical Best:** **O(log10(x))** time and **O(1)** space is the theoretical optimal limit, because you must check at least half the digits to verify a palindrome. The half-reversal approach reaches this theoretical limit.
+* **Improved Complexity:** Still **O(log10(x))** time and **O(1)** space, but with half the loop iterations and less memory usage per variable.
+* **Theoretical Limit:** **O(log10(x))** time is the absolute theoretical best because we must look at every digit at least once to confirm if it is a palindrome. The improved half-reversal version reaches this best limit.
 
 ## Edge Cases Handled
 
-* **Negative numbers (e.g., `-121`):** Handled by `if (x < 0)` at the top, immediately returning `false`.
-* **Single-digit numbers (e.g., `7`):** Handled naturally. The loop runs once, `rev` becomes `7`, which equals `n` (`7`).
-* **Zero (`0`):** Handled correctly. The loop does not run, leaving `rev` as `0`, which equals `n` (`0`). Returns `true`.
-* **Numbers ending in zero (e.g., `10`):** Handled correctly. Reverses to `1`, which does not match `10`. Returns `false`.
-* **Large numbers near integer limits (up to `2^31 - 1`):** Using `long` for `n` and `rev` prevents buffer overflow during reversal.
+* **Negative numbers (e.g., `-121`):** Handled immediately at the start with `if (x < 0) return false;`.
+* **Single-digit numbers (e.g., `7`):** The loop runs once, `rev` becomes `7`, which equals `n = 7`, correctly returning `true`.
+* **Numbers ending in zero (e.g., `10`):** Handled correctly as `rev` becomes `1`, which does not match `10`, returning `false`.
+* **Large numbers near integer limits (e.g., `2147483647`):** Using `long` for `n` and `rev` prevents overflow errors during multiplication when reversing large 32-bit integers.
