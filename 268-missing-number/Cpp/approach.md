@@ -7,65 +7,62 @@
 
 Imagine you have a row of lockers numbered from 0 up to N. If there are 3 lockers, their numbers are 0, 1, 2, and 3. That means there are 4 lockers in total (N = 3). 
 
-Someone takes all those locker numbers, mixes them up, and throws away *one* of them. They hand you the remaining numbers in a random list (an **array**, which is just an ordered line of boxes holding numbers). Your job is to look at that list and figure out which single number is missing from the full sequence.
+Now imagine someone takes all those locker numbers, scrambles them up, and throws away *one* of them. They hand you the remaining numbers in a list. Your job is to look at the list, figure out which number is missing, and return it.
 
-For example, if you are given the list [3, 0, 1], the full sequence should have been 0, 1, 2, and 3. Comparing what you have to what should be there, you can see that the number 2 is missing.
+For example, if the list is [3, 0, 1], the numbers present are 0, 1, and 3. The missing number from the range [0, 3] is 2.
 
 ## Intuition
 
-The "aha" moment for this math approach comes from thinking about a sum of numbers. 
+The "aha" moment for this math approach comes from grade-school arithmetic. 
 
-Instead of checking off numbers one by one or sorting the list, we can use a classic math trick. We know exactly how many numbers there should be and what range they cover (from 0 up to N). We can easily calculate what the **sum** of all those numbers *should* be if none were missing. 
+Instead of checking every number one by one using a **hash table** (a data structure that lets you look up items quickly) or sorting the list, we can use a simple math trick. We know exactly what the sum of all numbers from 0 to N *should* be. 
 
-Then, we add up all the numbers actually present in the given list. If we subtract the actual sum from the expected total sum, the leftover difference is precisely the missing number! 
+If we add up all the numbers actually present in our input list, that sum will be smaller than the expected total because one number is missing. The difference between what we *expect* the total sum to be and what we *actually* get by adding up the list items is the missing number itself.
 
 ## Approach
 
-* `int sum =0 ;` — Initializes a variable named `sum` to 0. This will keep a running total of all the numbers actually found inside the input list.
-* `for( int i=0 ; i<nums.size() ; i++)` — Starts a loop that looks at every single element in the list `nums` one by one, starting from the first position up to the end of the list.
-* `sum+=nums[i];` — Adds the value of the current number in the list to our running `sum` total.
-* `int total = (nums.size()*( nums.size()+1))/2;` — Calculates what the sum of the full sequence of numbers from 0 to N *should* be using the standard arithmetic sequence formula (length times length plus one, divided by 2), and stores it in `total`.
-* `return total-sum;` — Subtracts the sum of the numbers we actually found from the expected `total` sum, revealing the missing number, and returns it.
+* `int sum = 0;`: Creates a variable named `sum` starting at zero to hold the running total of all the numbers found inside the input list.
+* `for(int i=0; i<nums.size(); i++)`: Loops through every single element in the `nums` vector from the first index up to the last one.
+* `sum += nums[i];`: Adds the current number from the list into our running `sum` total during each loop cycle.
+* `int total = (nums.size() * (nums.size() + 1)) / 2;`: Calculates the expected sum of all integers from 0 up to N using the standard mathematical formula for triangular numbers, where N is the size of the array.
+* `return total - sum;`: Subtracts the actual sum of the elements from the expected total sum, leaving precisely the missing number, which is then returned.
 
 ## Dry Run
 
 ### Case 1: Typical case ([3, 0, 1])
 
-| Step | `i` | `nums[i]` | `sum` | Action |
-| :--- | :--- | :--- | :--- | :--- |
-| Start | - | - | 0 | Initialize `sum` to 0 |
-| Loop 1 | 0 | 3 | 3 | Add 3 to `sum` (0 + 3 = 3) |
-| Loop 2 | 1 | 0 | 3 | Add 0 to `sum` (3 + 0 = 3) |
-| Loop 3 | 2 | 1 | 4 | Add 1 to `sum` (3 + 1 = 4) |
-| Math | - | - | 4 | Calculate expected total for N = 3: (3 * 4) / 2 = 6 |
-| Return | - | - | 4 | Return total minus sum: 6 - 4 = 2 |
+| `i` | `nums[i]` | `sum` | Action |
+| :--- | :--- | :--- | :--- |
+| - | - | 0 | Initialize `sum` to 0. `nums.size()` is 3. |
+| 0 | 3 | 3 | Add `nums[0]` (3) to `sum`. |
+| 1 | 0 | 3 | Add `nums[1]` (0) to `sum`. Total remains 3. |
+| 2 | 1 | 4 | Add `nums[2]` (1) to `sum`. Total becomes 4. |
+| - | - | 4 | Calculate `total` as (3 * 4) / 2 = 6. |
+| - | - | 2 | Return `total - sum` (6 - 4 = 2). |
 
-### Case 2: Edge case with minimal size ([0, 1])
+### Case 2: Edge case with two elements ([0, 1])
 
-| Step | `i` | `nums[i]` | `sum` | Action |
-| :--- | :--- | :--- | :--- | :--- |
-| Start | - | - | 0 | Initialize `sum` to 0 |
-| Loop 1 | 0 | 0 | 0 | Add 0 to `sum` (0 + 0 = 0) |
-| Loop 2 | 1 | 1 | 1 | Add 1 to `sum` (0 + 1 = 1) |
-| Math | - | - | 1 | Calculate expected total for N = 2: (2 * 3) / 2 = 3 |
-| Return | - | - | 1 | Return total minus sum: 3 - 1 = 2 |
+| `i` | `nums[i]` | `sum` | Action |
+| :--- | :--- | :--- | :--- |
+| - | - | 0 | Initialize `sum` to 0. `nums.size()` is 2. |
+| 0 | 0 | 0 | Add `nums[0]` (0) to `sum`. |
+| 1 | 1 | 1 | Add `nums[1]` (1) to `sum`. Total becomes 1. |
+| - | - | 1 | Calculate `total` as (2 * 3) / 2 = 3. |
+| - | - | 2 | Return `total - sum` (3 - 1 = 2). |
 
 ## Time & Space Complexity
 
-* **Time:** O(n) — The code loops through the list of size N exactly once to calculate the sum of the elements.
-* **Space:** O(1) — It only creates a couple of integer variables (`sum` and `total`), taking up a constant, tiny amount of extra memory no matter how large the input list gets.
+* **Time:** O(n) — The code uses a single loop that visits each of the N elements in the array exactly once.
+* **Space:** O(1) — The code only creates a couple of integer variables (`sum` and `total`) regardless of how large the input array grows, meaning it uses constant extra memory.
 
 **Is this already the most optimal possible complexity for this problem, or can it be improved?**
 
-This code is already optimal in terms of both time and space. 
+Yes, this solution is already optimal. 
 
-No further improvement is possible because to find a missing number in an unsorted list, you fundamentally have to look at all N elements at least once, which takes O(n) time. Doing it with variables instead of storing new data structures keeps extra space at O(1). 
-
-*(Note: While the runtime performance on the platform can sometimes fluctuate due to server load or compiler quirks, the mathematical algorithm itself is running at the absolute theoretical limit of efficiency).*
+You cannot achieve a faster time complexity than O(n) because you must at least look at every element in the array to know if it is present. Similarly, O(1) space complexity is the absolute best possible memory usage because you are only storing a few simple variables and not creating any new data structures.
 
 ## Edge Cases Handled
 
-* **Missing 0:** If 0 is the missing number from the sequence (e.g., input list `[1, 2]`), the loop sum will be 3, the expected total for N = 2 is 3, and 3 - 3 = 0.
-* **Missing the maximum value N:** If the largest number is missing (e.g., input list `[0, 1]`), the loop sum will be 1, the expected total is 3, and 3 - 1 = 2.
-* **Single element lists:** The formula cleanly handles the smallest constraint boundary where N = 1 (e.g., input list `[0]` or `[1]`).
-* **All numbers unique:** The problem constraints guarantee all numbers are unique, meaning the math formula for a continuous sequence from 0 to N will always match up perfectly without duplicate interference.
+* **Smallest array size (N = 1):** Correctly handles arrays with just one element (like [0] or [1]) by applying the math formula smoothly.
+* **Missing element at the very end:** If the missing number is N itself, the sum of the array will equal the expected total, causing `total - sum` to correctly evaluate to 0.
+* **Missing element at zero:** If 0 is missing from the range, the sum of the array will equal the expected total minus zero, and the math still resolves accurately.
