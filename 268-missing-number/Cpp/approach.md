@@ -5,64 +5,66 @@
 
 ## Problem Explained
 
-Imagine you have a row of lockers numbered from 0 up to N. If there are 3 lockers, their numbers are 0, 1, 2, and 3. That means there are 4 lockers in total (N = 3). 
+Imagine you have a row of lockers numbered from 0 up to N. If there are 3 lockers, their numbers are 0, 1, 2, and 3. That means there are 4 lockers in total (N = 3, but the numbers go from 0 to 3). 
 
-Now imagine someone takes all those locker numbers, scrambles them up, and throws away *one* of them. They hand you the remaining numbers in a list. Your job is to look at the list, figure out which number is missing, and return it.
+Now imagine someone takes away one locker at random. You are given the remaining lockers in a random, jumbled-up list (an **array**). Your job is to find out which number is missing. 
 
-For example, if the list is [3, 0, 1], the numbers present are 0, 1, and 3. The missing number from the range [0, 3] is 2.
+For example, if the list is [3, 0, 1], the full set of numbers from 0 to 3 should be 0, 1, 2, and 3. Comparing our list to the full set, we can see that the number 2 is missing. That is our answer.
 
 ## Intuition
 
-The "aha" moment for this math approach comes from grade-school arithmetic. 
+Instead of searching through the list over and over to see which number is missing, we can use a simple math trick. 
 
-Instead of checking every number one by one using a **hash table** (a data structure that lets you look up items quickly) or sorting the list, we can use a simple math trick. We know exactly what the sum of all numbers from 0 to N *should* be. 
+Think of it like adding up a pile of weights. We know what the total weight *should* be if all the numbers from 0 up to N were present in our list. We can calculate this expected total instantly using a classic math formula: (N * (N + 1)) / 2. 
 
-If we add up all the numbers actually present in our input list, that sum will be smaller than the expected total because one number is missing. The difference between what we *expect* the total sum to be and what we *actually* get by adding up the list items is the missing number itself.
+Next, we add up the actual numbers that are sitting in front of us in the list. If we subtract our actual sum from the expected total, the leftover amount *must* be the missing number. It is like weighing a bag of flour with one scoop missing; the difference between the full weight and the current weight tells you exactly how much flour is gone.
 
 ## Approach
 
-* `int sum = 0;`: Creates a variable named `sum` starting at zero to hold the running total of all the numbers found inside the input list.
-* `for(int i=0; i<nums.size(); i++)`: Loops through every single element in the `nums` vector from the first index up to the last one.
-* `sum += nums[i];`: Adds the current number from the list into our running `sum` total during each loop cycle.
-* `int total = (nums.size() * (nums.size() + 1)) / 2;`: Calculates the expected sum of all integers from 0 up to N using the standard mathematical formula for triangular numbers, where N is the size of the array.
-* `return total - sum;`: Subtracts the actual sum of the elements from the expected total sum, leaving precisely the missing number, which is then returned.
+* `int sum = 0;` — Creates a variable named `sum` to keep a running total of all the numbers found inside the input list, starting at zero.
+* `for(int i=0; i<nums.size(); i++)` — Starts a loop that looks at every single number in the `nums` list one by one, from the first element up to the last.
+* `sum += nums[i];` — Adds the current number from the list into our running `sum` total.
+* `int total = (nums.size() * (nums.size() + 1)) / 2;` — Calculates what the sum of all numbers *should* be if no numbers were missing, using the size of the list as N in our math formula.
+* `return total - sum;` — Subtracts our actual list sum from the expected total, leaving us with the exact value of the missing number, which is then returned as the final answer.
 
 ## Dry Run
 
-### Case 1: Typical case ([3, 0, 1])
+### Case 1: Typical case (nums = [3, 0, 1])
 
 | `i` | `nums[i]` | `sum` | Action |
 | :--- | :--- | :--- | :--- |
-| - | - | 0 | Initialize `sum` to 0. `nums.size()` is 3. |
-| 0 | 3 | 3 | Add `nums[0]` (3) to `sum`. |
-| 1 | 0 | 3 | Add `nums[1]` (0) to `sum`. Total remains 3. |
-| 2 | 1 | 4 | Add `nums[2]` (1) to `sum`. Total becomes 4. |
-| - | - | 4 | Calculate `total` as (3 * 4) / 2 = 6. |
-| - | - | 2 | Return `total - sum` (6 - 4 = 2). |
+| 0 | 3 | 3 | Loop starts, adds 3 to `sum`. `nums.size()` is 3. |
+| 1 | 0 | 3 | Adds 0 to `sum` (total stays 3). |
+| 2 | 1 | 4 | Adds 1 to `sum`. Loop ends. |
+| - | - | - | `total` is calculated as (3 * 4) / 2 = 6. |
+| - | - | - | Returns `total - sum` (6 - 4 = 2). Missing number is 2. |
 
-### Case 2: Edge case with two elements ([0, 1])
+### Case 2: Edge case with larger array (nums = [0, 1])
 
 | `i` | `nums[i]` | `sum` | Action |
 | :--- | :--- | :--- | :--- |
-| - | - | 0 | Initialize `sum` to 0. `nums.size()` is 2. |
-| 0 | 0 | 0 | Add `nums[0]` (0) to `sum`. |
-| 1 | 1 | 1 | Add `nums[1]` (1) to `sum`. Total becomes 1. |
-| - | - | 1 | Calculate `total` as (2 * 3) / 2 = 3. |
-| - | - | 2 | Return `total - sum` (3 - 1 = 2). |
+| 0 | 0 | 0 | Loop starts, adds 0 to `sum`. `nums.size()` is 2. |
+| 1 | 1 | 1 | Adds 1 to `sum`. Loop ends. |
+| - | - | - | `total` is calculated as (2 * 3) / 2 = 3. |
+| - | - | - | Returns `total - sum` (3 - 1 = 2). Missing number is 2. |
 
 ## Time & Space Complexity
 
-* **Time:** O(n) — The code uses a single loop that visits each of the N elements in the array exactly once.
-* **Space:** O(1) — The code only creates a couple of integer variables (`sum` and `total`) regardless of how large the input array grows, meaning it uses constant extra memory.
+**Time:** O(n) — The code uses a single loop that goes through the list of numbers one time. If the list has 10,000 numbers, the loop runs 10,000 times. 
+
+**Space:** O(1) — The code only creates a couple of simple integer variables (`sum` and `total`) to do the math. It does not create any new lists or data structures that grow as the input gets bigger.
 
 **Is this already the most optimal possible complexity for this problem, or can it be improved?**
 
-Yes, this solution is already optimal. 
+This code is already optimal for both time and space. 
 
-You cannot achieve a faster time complexity than O(n) because you must at least look at every element in the array to know if it is present. Similarly, O(1) space complexity is the absolute best possible memory usage because you are only storing a few simple variables and not creating any new data structures.
+* **Time-wise:** To find a missing number, you fundamentally have to look at the numbers provided. Looking at a list of size N at least once takes O(n) time, so we cannot go any faster than that.
+* **Space-wise:** O(1) constant space is the absolute best possible memory usage because we are solving the problem using only a few basic math variables without storing extra copies of the data. 
+
+No further improvements are needed.
 
 ## Edge Cases Handled
 
-* **Smallest array size (N = 1):** Correctly handles arrays with just one element (like [0] or [1]) by applying the math formula smoothly.
-* **Missing element at the very end:** If the missing number is N itself, the sum of the array will equal the expected total, causing `total - sum` to correctly evaluate to 0.
-* **Missing element at zero:** If 0 is missing from the range, the sum of the array will equal the expected total minus zero, and the math still resolves accurately.
+* **Single element array (e.g., [0] or [1]):** The code correctly computes N as 1, finds the expected total, and subtracts the single item to find the missing neighbor.
+* **Missing element at the very end (e.g., [0, 1, 2]):** The expected sum matches the actual sum until the formula calculation reveals the missing upper boundary.
+* **Missing zero at the very beginning (e.g., [1, 2, 3]):** The loop sums 1, 2, and 3 to get 6. The expected total for N = 3 is also 6. Subtracting them gives 0, correctly identifying that zero is missing.
