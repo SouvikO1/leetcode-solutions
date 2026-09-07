@@ -5,89 +5,107 @@
 
 ## Problem Explained
 
-Imagine you have a row of numbers, like `[2, 7, 11, 15]`, and a goal number, like `9`. The problem asks you to find two numbers in that row that add up to your goal number. 
+Imagine you have a row of numbered boxes (an array of integers) and a specific goal number (the target). Your job is to find exactly **two** different boxes whose numbers add up to that target number. 
 
-Once you find them, you need to return their positions (their **indices**, starting from `0`). For `[2, 7, 11, 15]` and a target of `9`, the numbers `2` and `7` add up to `9`. Their positions are `0` and `1`. So the answer is `[0, 1]`. 
+Once you find them, you need to return their position numbers (their indices). 
 
-You are guaranteed that there is always exactly one correct pair, and you are not allowed to use the exact same position twice.
+For example, if your boxes contain the numbers 2, 7, 11, and 15, and your target is 9, you look at the box with 2 and the box with 7. Since 2 plus 7 equals 9, you return their positions: 0 and 1. 
+
+The rules say there will always be one correct answer, and you cannot use the same box twice.
+
+---
 
 ## Intuition
 
-The "brute force" idea is to look at every possible pair of numbers in the array. You pick the first number, then check every other number that comes after it to see if they add up to the target. 
+The core idea here is the **brute force** method — which is a fancy way of saying "try every possible pair until you find the right one." 
 
-If they do not, you move to the second number and check all the numbers after it. You keep doing this until you find a pair that works. It is like checking every handshake in a room one by one. It is simple to write, but it does a lot of repetitive work.
+If you are revisiting this, you might remember it as the nested loop approach. You pick the first number, and then you walk down the rest of the line checking every other number to see if the two add up to the target. If they don't, you move to the second number and repeat the check. 
+
+While it is slow for large lists, it is very easy to write and understand because it mimics how a human would manually search through a list of numbers.
+
+---
 
 ## Approach
 
-Here is how the code walks through the array step-by-step:
+Here is how the code executes step-by-step:
 
-* `int n = nums.size();` — This gets the total count of elements in the `nums` array and saves it in `n` so we know how far to loop.
-* `for( int i=0 ; i<n-1 ; i++ )` — This starts an outer loop with index `i`. It stops one spot before the end because the last number has no pairs coming after it.
-* `for( int j=i+1 ; j<n ; j++ )` — This starts an inner loop with index `j`. It always starts right after `i` to avoid checking the same pair twice or pairing a number with itself.
-* `if( nums[i]+nums[j] == target )` — This checks if the number at position `i` plus the number at position `j` equals our target number.
-* `return {i,j};` — If the sum matches the target, this immediately returns the two positions as a pair.
-* `return {};` — If the loops finish completely without ever returning inside the if statement, this safety net returns an empty result (though the problem guarantees a solution exists, so this line is never actually reached).
+* `int n = nums.size();` — This calculates how many numbers are in the input list and stores that count in the variable **n**.
+* `for( int i=0 ; i<n-1 ; i++ )` — This starts an outer loop using a pointer named **i**. It looks at numbers starting from the very first one up until the second-to-last one.
+* `for( int j=i+1 ; j<n ; j++ )` — Inside the first loop, this starts a second loop using a pointer named **j**. It always looks at numbers that come *after* the one pointed to by **i**, ensuring we never check the same number against itself or repeat a pair backward.
+* `if( nums[i]+nums[j] == target )` — This checks if the number at position **i** plus the number at position **j** equals our **target**.
+* `return {i,j};` — If the math checks out, it immediately bundles positions **i** and **j** together and returns them as the final answer.
+* `return {};` — If both loops finish running completely without ever finding a matching pair, this backup line returns an empty list (though the problem guarantees a valid answer always exists).
+
+---
 
 ## Dry Run
 
-### Case 1: Typical case (`nums = [2, 7, 11, 15]`, `target = 9`)
+### Case 1: Typical case (nums = [2,7,11,15], target = 9)
 
-| `i` | `j` | `nums[i]` | `nums[j]` | Sum (`nums[i] + nums[j]`) | Action |
-| --- | --- | --- | --- | --- | --- |
-| `0` | `1` | `2` | `7` | `9` | Matches target (`9 == 9`). Returns `{0, 1}`. |
+| i | j | nums[i] | nums[j] | nums[i] + nums[j] == 9? | Action |
+|---|---|---------|---------|-------------------------|--------|
+| 0 | 1 | 2       | 7       | Yes (2 + 7 = 9)         | Returns `{0, 1}` immediately |
 
-### Case 2: Second example (`nums = [3, 2, 4]`, `target = 6`)
+### Case 2: Edge case with duplicate values (nums = [3,3], target = 6)
 
-| `i` | `j` | `nums[i]` | `nums[j]` | Sum (`nums[i] + nums[j]`) | Action |
-| --- | --- | --- | --- | --- | --- |
-| `0` | `1` | `3` | `2` | `5` | Does not match target (`5 != 6`). Keep going. |
-| `0` | `2` | `3` | `4` | `7` | Does not match target (`7 != 6`). Keep going. |
-| `1` | `2` | `2` | `4` | `6` | Matches target (`6 == 6`). Returns `{1, 2}`. |
+| i | j | nums[i] | nums[j] | nums[i] + nums[j] == 6? | Action |
+|---|---|---------|---------|-------------------------|--------|
+| 0 | 1 | 3       | 3       | Yes (3 + 3 = 6)         | Returns `{0, 1}` immediately |
+
+---
 
 ## Time & Space Complexity
 
-**Time:** O(n^2) — using a nested loop where the outer loop runs N times and the inner loop runs roughly N / 2 times on average, resulting in about N * N / 2 operations.
-**Space:** O(1) — using a constant amount of extra memory regardless of the input size, since we only store a few variables like `n`, `i`, and `j`.
+* **Time:** O(n^2) — using two nested loops that each scale with the size of the input list. The outer loop runs roughly n times, and the inner loop runs roughly n times for each step, leading to N * N total checks in the worst-case scenario.
+* **Space:** O(1) — constant extra space, because we are only creating a couple of simple integer variables (**n**, **i**, **j**) regardless of how large the input list gets.
 
 **Is this already the most optimal possible complexity for this problem, or can it be improved?**
 
-No, the time complexity can be improved. 
+No, this can be significantly improved. 
 
-Instead of checking every pair with nested loops, we can use a **hash table** (a data structure that lets us look up values instantly). As we walk through the array once, we can calculate the **complement** for each number (which is `target - nums[i]`). We check if we have already seen that complement earlier. If we have not, we save the current number and its index in our hash table and move on. The moment we encounter a number whose complement is already in the hash table, we instantly know we found our pair.
+### How to Optimize
 
-Here is what the optimized code looks like:
+Right now, our inner loop wastes a lot of time re-checking numbers we have already looked at. To speed this up, we can use a **Hash Table** (called an `unordered_map` in C++). A hash table is like a digital phonebook where you can instantly look up a value without scanning the whole book page by page.
+
+Instead of asking "does this number plus every future number equal the target?", we can flip the math around. As we walk through the list item by item, we can calculate what *complement* we need. For any number, its complement is simply `target minus current_number`. 
+
+We ask our hash table: "Have I already seen this required complement earlier?" If no, we save the current number and its position into the hash table and move on. If yes, we instantly found our pair! This lets us solve the entire problem in a single pass through the list.
+
+### Optimized Code Snippet
 
 ```cpp
 class Solution {
 public:
     vector<int> twoSum(vector<int>& nums, int target) {
-        unordered_map<int, int> seen;
+        unordered_map<int, int> seen; // stores {number, its position}
         for (int i = 0; i < nums.size(); i++) {
             int complement = target - nums[i];
-            if (seen.count(complement)) {
-                return {seen[complement], i};
+            if (seen.find(complement) != seen.end()) {
+                return {seen[complement], i}; // found it! return old position and current position
             }
-            seen[nums[i]] = i;
+            seen[nums[i]] = i; // remember this number for the future
         }
         return {};
     }
 };
 ```
 
-* `unordered_map<int, int> seen;` creates a hash table to store numbers we have visited and their positions.
-* `int complement = target - nums[i];` figures out what other number we need to reach the target.
-* `if (seen.count(complement))` checks in instant time if we have already met that needed number.
-* `seen[nums[i]] = i;` saves the current number so future steps can find it.
+* `unordered_map<int, int> seen;` creates our instant lookup table.
+* `int complement = target - nums[i];` calculates the exact missing partner we need.
+* `seen.find(complement)` checks our lookup table in O(1) average time to see if we've met that partner already.
+* `seen[nums[i]] = i;` logs the current number so future numbers can check against it.
 
-**Resulting improved complexity:**
-- **Time:** O(n) — we only loop through the array once, and hash table lookups take O(1) time on average.
-- **Space:** O(n) — in the worst case, we store every element of the array in the hash table.
+### Resulting Improved Complexity
+* **Time:** O(n) — we only loop through the list once, and hash table lookups take O(1) time on average.
+* **Space:** O(n) — in the worst case, we might store almost every number in our hash table before finding the match.
 
-**Theoretical best possible complexity:**
-O(n) time is the theoretical best possible complexity for this problem because we must at least look at each element in the array once to know what it is. The improved version reaches this optimal time limit.
+### Theoretical Best Complexity
+O(n) time is the theoretical best possible complexity for this problem because you must look at every element in the array at least once to ensure you don't miss the answer. Our optimized hash table version successfully reaches this optimal limit.
+
+---
 
 ## Edge Cases Handled
 
-* **Duplicate values (e.g. `[3, 3]`, target `6`):** Handled correctly because the inner loop checks positions one by one. The first `3` at index `0` pairs with the second `3` at index `1`.
-* **Negative numbers (e.g. `[-1, -2, -3]`, target `-5`):** Handled correctly because addition and equality checks work the same way with negative numbers.
-* **Minimum array size (length of 2):** Handled correctly because the outer loop runs when `i = 0` and the inner loop checks `j = 1`, covering the only possible pair.
+* **Minimum array size:** The constraints guarantee the array has at least 2 elements (`nums.length >= 2`), so the loops will always have valid bounds to check.
+* **Duplicate numbers:** Handled correctly because the loops use strict index positioning (`j = i+1`), meaning the code treats identical numbers at different positions as unique entries (such as `[3, 3]` with target 6).
+* **Negative numbers:** Handled correctly because basic integer addition and subtraction work identically with negative values (e.g., target - negative number becomes addition).
