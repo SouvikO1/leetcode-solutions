@@ -5,67 +5,68 @@
 
 ## Problem Explained
 
-Imagine you have a regular whole number, like 123. The problem asks you to flip its digits backward so it becomes 321. 
+Imagine you have a regular whole number, like 123. The problem asks you to flip its digits backward so it becomes 321. If the number is negative, like -123, the minus sign stays out front and the digits flip to become -321. 
 
-If the number is negative, like -123, the negative sign stays in front, and the digits flip to become -321. 
-
-There is an important safety rule: standard 32-bit computers can only hold whole numbers roughly between -2,147,483,648 and 2,147,483,647. If flipping the digits makes the number grow too big or too small to fit in that range, you must give up and return 0 instead. Also, you are not allowed to cheat by using extra-large 64-bit containers to catch those oversized numbers.
+There is a major catch. Computers store standard 32-bit integers within a strict numeric range from -2,147,483,648 up to 2,147,483,647. If flipping the digits makes the number grow too large or too small to fit inside this range, you must return 0 instead. Also, the rules explicitly forbid using 64-bit numbers as a shortcut. You have to solve it using regular math on standard 32-bit values.
 
 ## Intuition
 
-The core trick is peeling off the last digit of the number one by one, using basic math, and building the reversed number from scratch. 
+The core trick to reversing a number is peeling off the digits one by one from right to left, and building the new reversed number from left to right. 
 
-Think about how you strip digits off a number in real life. If you take 123, you can use the remainder operator (percent sign) to grab the last digit (3). Then you divide the number by 10 to shrink it (leaving 12). 
+Think about how you pull the last digit off any number in base-10 math: you use the remainder operator (percent sign). For example, 123 percent 10 gives you 3. Then, to get rid of that 3 so you can look at the next digit, you divide the number by 10. That turns 123 into 12. 
 
-To build the reverse, you take your growing answer, multiply it by 10 to shift all its current digits one spot to the left, and then drop that new digit onto the end. 
+To build your reversed answer, you take whatever you have built so far, multiply it by 10 to shift all its digits one spot to the left, and then add your newly grabbed digit onto the end. 
 
-The "aha" moment for handling the size limit without a 64-bit container is stopping *before* you overflow. If your current built number is already bigger than 214,748,364 (which is INT_MAX / 10), multiplying it by 10 in the next step will definitely blast past the limit. Checking this ahead of time keeps you safe and legal.
+The "aha" safety moment of this specific solution is checking for overflow *before* you actually do the multiplication and addition. Because you cannot use 64-bit numbers, you cannot wait for the number to overflow and then check if it broke. Instead, you look ahead: if your current built-up number is already larger than the maximum integer divided by 10, multiplying it by 10 on the next step will definitely push it past the limit. Checking this early prevents your program from crashing or wrapping around into garbage numbers.
 
 ## Approach
 
-* `int check = 0;`: Creates a variable named **check** starting at 0. This variable will hold our reversed number as we build it digit by digit.
-* `while( x != 0)`: Starts a loop that keeps running as long as **x** still has digits left to process.
-* `if( check > INT_MAX/10 || check < INT_MIN/10)`: Checks if our running number **check** is already too large or too small. If it is, multiplying it by 10 on the next line would crash our integer limits, so we immediately return 0.
-* `check = check *10 + x % 10 ;`: Multiplies our current **check** by 10 to make room, then grabs the last digit of **x** using `x % 10` and adds it to the end.
-* `x /= 10 ;`: Divides **x** by 10 to chop off the last digit we just used, moving us on to the next digit.
-* `return check;`: Sends back our finished, fully reversed number once the loop finishes.
+* `int check = 0;`: Initialize a tracking variable named `check` to store our reversed number as we build it, starting at 0.
+* `while( x != 0){`: Start a loop that keeps running as long as there are still digits left in `x` to process.
+* `if( check > INT_MAX/10 || check < INT_MIN/10){ return 0; }`: Check if multiplying `check` by 10 on the upcoming line would cause it to exceed the maximum allowed 32-bit integer or drop below the minimum allowed 32-bit integer. If it would, safety rules trigger and we immediately return 0.
+* `check = check *10 + x % 10 ;`: Shift our existing `check` value one decimal place to the left by multiplying by 10, then add the rightmost digit of `x` (obtained using `x % 10`) onto the end.
+* `x /= 10 ;`: Strip away the rightmost digit we just processed from `x` by dividing `x` by 10.
+* `return check;`: Once the loop finishes because `x` has been completely stripped down to 0, return the fully constructed reversed number stored in `check`.
 
 ## Dry Run
 
-### Case 1: Typical case
+### Case 1: Typical case (Positive number)
+Input: `x = 123`
 
-Input: x = 123
+| Step | `x` (before loop/step) | `check` (before update) | `x % 10` | Action | `x` (after update) | `check` (after update) |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| 1 | 123 | 0 | 3 | Multiply check by 10 and add 3, then divide x by 10 | 12 | 3 |
+| 2 | 12 | 3 | 2 | Multiply check by 10 and add 2, then divide x by 10 | 1 | 32 |
+| 3 | 1 | 32 | 1 | Multiply check by 10 and add 1, then divide x by 10 | 0 | 321 |
 
-| x | check | Action |
-|---|---|---|
-| 123 | 0 | Loop starts. check is safe. check becomes `0 * 10 + 3` (3). x becomes 12. |
-| 12 | 3 | check is safe. check becomes `3 * 10 + 2` (32). x becomes 1. |
-| 1 | 32 | check is safe. check becomes `32 * 10 + 1` (321). x becomes 0. |
-| 0 | 321 | Loop ends because x is 0. Returns 321. |
+Loop terminates because `x` is now 0. Returns `321`.
 
-### Case 2: Negative number with trailing zero
+### Case 2: Negative number with a trailing zero
+Input: `x = -120`
 
-Input: x = -120
+| Step | `x` (before loop/step) | `check` (before update) | `x % 10` | Action | `x` (after update) | `check` (after update) |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| 1 | -120 | 0 | 0 | Multiply check by 10 and add 0, then divide x by 10 | -12 | 0 |
+| 2 | -12 | 0 | -2 | Multiply check by 10 and add -2, then divide x by 10 | -1 | -2 |
+| 3 | -1 | -2 | -1 | Multiply check by 10 and add -1, then divide x by 10 | 0 | -21 |
 
-| x | check | Action |
-|---|---|---|
-| -120 | 0 | Loop starts. check is safe. check becomes `0 * 10 + (-120 % 10)` (-0). x becomes -12. |
-| -12 | 0 | check is safe. check becomes `0 * 10 + (-12 % 10)` (-2). x becomes -1. |
-| -1 | -2 | check is safe. check becomes `-2 * 10 + (-1 % 10)` (-21). x becomes 0. |
-| 0 | -21 | Loop ends because x is 0. Returns -21. |
+Loop terminates because `x` is now 0. Returns `-21`.
 
 ## Time & Space Complexity
 
-**Time:** O(log(x)) — The number of steps depends directly on how many digits are in **x**. Since a 32-bit integer has a maximum of 10 digits, the loop runs at most 10 times, making it effectively constant time. 
-**Space:** O(1) — We only use a couple of standard variables (**check**), which takes up a fixed, tiny amount of memory no matter how large **x** is.
+* **Time:** `O(log(N))` — where `N` is the value of `x`. The number of steps depends directly on how many digits `N` has. Because we divide `x` by 10 in every single loop iteration, the number of steps grows logarithmically based on the size of the number.
+* **Space:** `O(1)` — constant space. We only use a couple of primitive integer variables (`check`), meaning our memory usage never grows no matter how large the input number gets.
 
 **Is this already the most optimal possible complexity for this problem, or can it be improved?**
 
-Yes, this code is already fully optimal. It runs in minimal time (touching each digit only once) and uses constant space. No further improvement is possible.
+Yes, this solution is already completely optimal. 
+* **Time complexity:** You cannot do it faster than checking each digit once, so `O(log(N))` is the absolute theoretical limit for time.
+* **Space complexity:** Using `O(1)` memory means we use a fixed amount of extra space regardless of input size, which cannot be beaten. 
+
+No further improvements are possible.
 
 ## Edge Cases Handled
 
-* **Negative numbers:** The modulo operator in C++ keeps the negative sign attached to the remainder (e.g., `-123 % 10` is `-3`), which naturally carries negative values through the reversal process.
-* **Trailing zeros:** Numbers ending in zero (like 120) have their trailing zero moved to the front during math operations (becoming 021, which evaluates as 21).
-* **Boundary overflow near the limit:** The pre-check against `INT_MAX / 10` and `INT_MIN / 10` successfully catches numbers that are about to exceed 32-bit limits *before* the overflow actually happens.
-* **Single-digit numbers:** Numbers between -9 and 9 skip the loop logic or run it just once, cleanly returning themselves.
+* **Negative numbers:** C++ handles negative number remainders naturally (e.g., `-123 % 10` is `-3`), and the loop logic correctly preserves negative signs all the way through to the final output.
+* **Trailing zeros:** Numbers like `120` turn into `21` because the leading zero becomes a useless leading zero when reversed, which math-wise drops off automatically.
+* **Overflow protection:** Any input that would overflow the 32-bit boundary when reversed is safely caught *before* it breaks the program, returning 0 as required.
