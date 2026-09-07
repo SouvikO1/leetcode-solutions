@@ -1,74 +1,87 @@
 ![Runtime](https://img.shields.io/badge/Runtime-0%20ms%20(beats%20100.00%25)-brightgreen?style=for-the-badge)
-![Memory](https://img.shields.io/badge/Memory-8.6%20MB%20(beats%2054.22%25)-yellow?style=for-the-badge)
+![Memory](https://img.shields.io/badge/Memory-8.6%20MB%20(beats%2054.23%25)-yellow?style=for-the-badge)
 
 ---
 
 ## Problem Explained
 
-The problem asks you to take a 32-bit signed integer `x` and turn its digits around in reverse order. 
+The problem asks you to take a 32-bit signed integer `x` and reverse its digits. 
 
 For example:
 * If `x = 123`, reversing the digits gives `321`.
 * If `x = -123`, the negative sign stays at the front, giving `-321`.
-* If `x = 120`, reversing the digits gives `021`, which simplifies to `21`.
+* If `x = 120`, dropping the leading zero in the reversed result gives `21`.
 
-There is one major catch: computer memory for a standard 32-bit integer can only hold values from `-2^31` (`-2147483648`) up to `2^31 - 1` (`2147483647`). If reversing `x` results in a number outside this exact range, you must return `0`. You are also strictly forbidden from using larger 64-bit integer types (like `long long` in C++) to temporarily hold the number.
+**The main catch:** standard 32-bit signed integers can only hold values from `-2^31` (-2,147,483,648) up to `2^31 - 1` (2,147,483,647). If reversing `x` causes the number to go above or below this range, you must return `0`. You are also explicitly forbidden from using 64-bit integer variables (like `long long` in C++) to hold larger numbers temporarily.
+
+---
 
 ## Intuition
 
-To reverse a number without converting it to a text string, you can pluck digits off the end of `x` one by one and build a new number.
+To reverse a number without converting it to text, you can pull off its digits one by one from right to left using basic math:
 
-1. **How to pluck the last digit:** Taking `x % 10` gives you the last digit of `x`.
-2. **How to append that digit:** Multiplying your reversed result by 10 shifts all existing digits one place to the left, opening up the ones place to add the new digit.
-3. **How to remove the last digit:** Integer division `x / 10` removes the last digit from `x`.
+1. **Extract the last digit:** `x % 10` gives you the rightmost digit.
+2. **Remove the last digit:** `x / 10` chops off the rightmost digit.
+3. **Build the new number:** Multiply your running total by `10` (shifting its digits left) and add the extracted digit.
 
-**The Overflow Trick:** 
-Because we cannot store a number larger than `INT_MAX` (`2147483647`), we must check if our new number will overflow *before* we actually multiply by 10. 
+The core challenge is catching **overflow** before it actually happens. 
 
-Instead of checking `check * 10 > INT_MAX` (which would overflow and crash or wrap around if true), we divide both sides by 10 and check `check > INT_MAX / 10`. If `check` is already larger than `INT_MAX / 10`, multiplying it by 10 will definitely breach the limit. The same logic applies to negative numbers using `INT_MIN / 10`.
+If your running answer is already greater than `INT_MAX / 10` (which is `214748364`), multiplying it by 10 will immediately exceed the maximum 32-bit limit (`2147483647`). The same logic applies to negative numbers with `INT_MIN / 10`. By checking this boundary *right before* multiplying by 10, you prevent overflow safely without needing extra memory or bigger variable types.
+
+---
 
 ## Approach
 
-* `int check = 0;` — Create a variable named `check` and set it to `0`. This variable holds our reversed number as we build it digit by digit.
-* `while( x != 0)` — Start a loop that runs until `x` becomes `0`. This strips every digit from `x` from right to left.
-* `if( check > INT_MAX/10 || check < INT_MIN/10)` — Check if doing the next math step will push `check` beyond the maximum or minimum 32-bit integer limits. If `check` is already greater than `INT_MAX / 10` or smaller than `INT_MIN / 10`, return `0` immediately to prevent overflow.
-* `check = check *10 + x % 10 ;` — Extract the last digit of `x` using `x % 10`, shift `check`'s existing digits one position left by multiplying by 10, and add the new digit to the end.
-* `x /= 10 ;` — Divide `x` by 10 to strip off its last digit.
-* `return check;` — Once `x` hits `0`, all digits have been reversed. Return `check`.
+* `int check = 0;`: Initialize `check` to `0`. This variable will hold our reversed number as we build it digit by digit.
+* `while( x != 0)`: Start a loop that runs as long as `x` still has remaining digits to process.
+* `if( check > INT_MAX/10 || check < INT_MIN/10)`: Check if multiplying `check` by 10 in the next step will push it beyond the allowable 32-bit range (`-2147483648` to `2147483647`).
+* `return 0;`: If `check` is already past those safety thresholds, multiplying by 10 would cause an overflow or underflow, so stop immediately and return `0`.
+* `check = check *10 + x % 10 ;`: Shift the existing digits in `check` one position to the left (by multiplying by 10), then append the rightmost digit of `x` (obtained via `x % 10`).
+* `x /= 10 ;`: Chop off the rightmost digit of `x` using integer division so the next iteration can process the next digit.
+* `return check;`: Once all digits are processed and `x` becomes `0`, return the finalized reversed number.
+
+---
 
 ## Dry Run
 
-### Case 1: Positive number with trailing zero (`x = 120`)
+### Case 1: Typical positive integer (x = 123)
 
 | Step | `x` | `check` | Action |
-| :--- | :--- | :--- | :--- |
-| Start | `120` | `0` | Initialize `check = 0`. |
-| Step 1 | `12` | `0` | Boundary check passes (`0`). Pluck `0` (`120 % 10`). `check` becomes `0 * 10 + 0 = 0`. Divide `x` by 10 (`12`). |
-| Step 2 | `1` | `2` | Boundary check passes (`0`). Pluck `2` (`12 % 10`). `check` becomes `0 * 10 + 2 = 2`. Divide `x` by 10 (`1`). |
-| Step 3 | `0` | `21` | Boundary check passes (`2`). Pluck `1` (`1 % 10`). `check` becomes `2 * 10 + 1 = 21`. Divide `x` by 10 (`0`). |
-| End | `0` | `21` | Loop ends because `x == 0`. Return `21`. |
+| --- | --- | --- | --- |
+| Start | `123` | `0` | Loop condition `123 != 0` is true. `0` is within bounds. |
+| 1 | `12` | `3` | `123 % 10` gives `3`. `check` becomes `0 * 10 + 3 = 3`. `x` becomes `12`. |
+| 2 | `1` | `32` | `12 % 10` gives `2`. `check` becomes `3 * 10 + 2 = 32`. `x` becomes `1`. |
+| 3 | `0` | `321` | `1 % 10` gives `1`. `check` becomes `32 * 10 + 1 = 321`. `x` becomes `0`. |
+| End | `0` | `321` | Loop ends because `x == 0`. Returns `321`. |
 
-### Case 2: Negative number (`x = -123`)
+### Case 2: Negative integer (x = -123)
 
 | Step | `x` | `check` | Action |
-| :--- | :--- | :--- | :--- |
-| Start | `-123` | `0` | Initialize `check = 0`. |
-| Step 1 | `-12` | `-3` | Boundary check passes (`0`). Pluck `-3` (`-123 % 10`). `check` becomes `0 * 10 + (-3) = -3`. Divide `x` by 10 (`-12`). |
-| Step 2 | `-1` | `-32` | Boundary check passes (`-3`). Pluck `-2` (`-12 % 10`). `check` becomes `-3 * 10 + (-2) = -32`. Divide `x` by 10 (`-1`). |
-| Step 3 | `0` | `-321` | Boundary check passes (`-32`). Pluck `-1` (`-1 % 10`). `check` becomes `-32 * 10 + (-1) = -321`. Divide `x` by 10 (`0`). |
-| End | `0` | `-321` | Loop ends because `x == 0`. Return `-321`. |
+| --- | --- | --- | --- |
+| Start | `-123` | `0` | Loop condition `-123 != 0` is true. `0` is within bounds. |
+| 1 | `-12` | `-3` | `-123 % 10` gives `-3`. `check` becomes `0 * 10 + (-3) = -3`. `x` becomes `-12`. |
+| 2 | `-1` | `-32` | `-12 % 10` gives `-2`. `check` becomes `-3 * 10 + (-2) = -32`. `x` becomes `-1`. |
+| 3 | `0` | `-321` | `-1 % 10` gives `-1`. `check` becomes `-32 * 10 + (-1) = -321`. `x` becomes `0`. |
+| End | `0` | `-321` | Loop ends because `x == 0`. Returns `-321`. |
+
+---
 
 ## Time & Space Complexity
 
-* **Time Complexity:** **O(1)** (or **O(log10(x))**). A 32-bit integer has at most 10 digits. The `while` loop runs at most 10 times regardless of how large `x` is, which takes constant time.
-* **Space Complexity:** **O(1)**. The code uses only two integer variables (`x` and `check`), consuming a fixed amount of memory.
+* **Time:** **O(1)** (Constant Time) — The loop runs once per digit. Since a standard 32-bit signed integer has at most 10 digits, the loop runs 10 times at most, regardless of the input value.
+* **Space:** **O(1)** (Constant Space) — Only one extra variable (`check`) is stored in memory, requiring a tiny, fixed amount of space.
 
-**Is this optimal?**
-Yes, this solution is already fully optimal. You must look at every digit at least once to reverse the number, so you cannot use fewer operations. No further performance improvements are possible.
+### Is this solution optimal?
+
+**Yes, this code is already optimal.** 
+
+To reverse an integer, you must examine every digit at least once, which takes time proportional to the number of digits (at most 10 iterations). Storing a single variable takes minimum memory. Neither the time nor space complexity can be improved further.
+
+---
 
 ## Edge Cases Handled
 
-* **Negative Numbers:** In C++, the `%` operator on a negative number returns a negative digit (for example, `-123 % 10 = -3`). The logic handles negative signs automatically without needing extra code.
-* **Trailing Zeros:** Numbers like `120` naturally drop their leading zero when reversed, outputting `21` because `0 * 10 + 0` stays `0` during the first iteration.
-* **Single-Digit Numbers:** Numbers like `7` or `-5` loop once and immediately return themselves.
-* **Integer Overflow:** Numbers that would exceed `2147483647` or drop below `-2147483648` when reversed (such as `x = 1534236469`) safely trigger the boundary check and return `0` without causing undefined behavior.
+* **Negative Numbers:** In C++, the modulo operator `%` preserves the negative sign (for example, `-123 % 10` is `-3`). The code processes negative numbers naturally without needing special negative sign handling.
+* **Numbers Ending in Zero:** Inputs like `120` leave a trailing zero when reversed (`021`). Because we build `check` mathematically (`0 * 10 + 2 = 2`), leading zeros are naturally dropped, correctly producing `21`.
+* **Overflow / Underflow Limits:** Inputs that reverse into numbers larger than `2147483647` or smaller than `-2147483648` (such as `1534236469`) hit the boundary guard `check > INT_MAX / 10` and safely return `0`.
+* **Single Digit & Zero:** Inputs like `0` or `7` immediately complete their loop and return the input unchanged.
