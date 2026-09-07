@@ -5,9 +5,9 @@
 
 ## Problem Explained
 
-This problem asks us to take a regular number (like 3749) and turn it into its Roman numeral equivalent (like "MMMDCCXLIX"). 
+The problem asks us to take a normal integer (like 3749) and translate it into a **Roman numeral string** (like "MMMDCCXLIX"). 
 
-Roman numerals use combinations of seven letters:
+Roman numerals use seven core symbols:
 - I = 1
 - V = 5
 - X = 10
@@ -16,63 +16,62 @@ Roman numerals use combinations of seven letters:
 - D = 500
 - M = 1000
 
-Instead of just adding symbols together blindly, Roman numerals follow a subtractive rule for numbers like 4, 9, 40, 90, 400, and 900. For example, instead of writing four "I"s for the number 4, we write "IV" (which means 5 minus 1). The input number will always be between 1 and 3999.
+Instead of just adding symbols together blindly, Roman numerals follow strict rules. Powers of 10 (I, X, C, M) can only be repeated up to three times consecutively. When you need to represent numbers like 4 or 9, you use a **subtractive form** (placing a smaller value before a larger one). For example, 4 is written as IV (1 before 5), and 9 is written as IX (1 before 10). 
+
+We are given a number between 1 and 3999, and our job is to output the correct Roman numeral string following these exact rules.
 
 ## Intuition
 
-The "aha" moment for this problem is realizing that any number between 1 and 3999 can be broken down into its individual place values: thousands, hundreds, tens, and ones. 
+The "aha" moment for this problem comes from realizing that **any number up to 3999 can be broken down strictly by its decimal places**: thousands, hundreds, tens, and ones. 
 
-Because the input has a strict upper limit (3999), there are only a fixed number of possibilities for each place value. For example, the hundreds place can only ever be values like 100 ("C"), 200 ("CC"), 400 ("CD"), up to 900 ("CM"), or nothing at all. 
+Because the input has a strict upper limit of 3999, there are only a fixed number of possibilities for each decimal place:
+- The thousands place can only be 0, 1000, 2000, or 3000.
+- The hundreds place can only be anything from 0 to 900.
+- The tens place can only be anything from 0 to 90.
+- The ones place can only be anything from 0 to 9.
 
-Instead of writing complex loops or conditional statements to figure this out dynamically, we can pre-write every possible word piece for every place value in lookup lists (arrays). Then, converting a number is as simple as slicing out each digit (thousands, hundreds, tens, ones) and grabbing the exact matching translation from our pre-made lists.
+Instead of writing complex loops or conditional statements to figure out how to build the string piece by piece, we can pre-build lookup lists for every single possible digit value from 0 to 9 in each decimal position. Then, we can use simple math (division and remainder) to extract each digit of our input number and instantly grab its Roman numeral translation from our lists.
 
 ## Approach
 
-Here is how the code works, step-by-step:
+Here is how the code executes step-by-step:
 
-- `string ones[] = {"","I","II","III","IV","V","VI","VII","VIII","IX"};`: Creates an array holding every Roman numeral combination for the ones place (from 0 to 9). Index 0 is blank because a number might not have a ones digit (like 50 has nothing in the ones place).
-- `string tens[] = {"","X","XX","XXX","XL","L","LX","LXX","LXXX","XC"};`: Creates an array holding every Roman numeral combination for the tens place (from 0 to 90).
-- `string hrns[] = {"","C","CC","CCC","CD","D","DC","DCC","DCCC","CM"};`: Creates an array holding every Roman numeral combination for the hundreds place (from 0 to 900).
-- `string ths[]={"","M","MM","MMM"};`: Creates an array holding the thousands place combinations. It only goes up to 3000 ("MMM") because the constraints say the maximum input is 3999.
-- `return ths[num/1000] + hrns[(num%1000)/100] + tens[(num%100)/10] + ones[num%10];`: Takes the input number, uses math to isolate each place value digit, uses those digits as indexes to look up the correct Roman fragments from our arrays, and adds them all together into one final string to return.
+- `string ones[] = {"","I","II","III","IV","V","VI","VII","VIII","IX"};`: Creates a list of all possible Roman numeral representations for the ones place (digits 0 through 9).
+- `string tens[] = {"","X","XX","XXX","XL","L","LX","LXX","LXXX","XC"};`: Creates a list of all possible Roman numeral representations for the tens place (multiples of 10 from 0 to 90).
+- `string hrns[] = {"","C","CC","CCC","CD","D","DC","DCC","DCCC","CM"};`: Creates a list of all possible Roman numeral representations for the hundreds place (multiples of 100 from 0 to 900).
+- `string ths[]={"","M","MM","MMM"};`: Creates a list of all possible Roman numeral representations for the thousands place (multiples of 1000 from 0 to 3000).
+- `return ths[num/1000] + hrns[(num%1000)/100] + tens[(num%100)/10] + ones[num%10];`: Extracts each place value using division and remainder operations, looks up the corresponding Roman string in each array, and adds them together from largest to smallest place value to form the final result.
 
 ## Dry Run
 
-Let's trace two examples to see how the code processes them.
+Let us trace the code using two examples: one typical case and one boundary/edge case.
 
 ### Case 1: Typical case (num = 3749)
 
-| Variable / Expression | Value | Action |
-| :--- | :--- | :--- |
-| `num` | 3749 | Starting input value. |
-| `num / 1000` | 3 | Looks up index 3 in `ths`, getting `"MMM"`. |
-| `(num % 1000) / 100` | 7 | Looks up index 7 in `hrns`, getting `"DCC"`. |
-| `(num % 100) / 10` | 4 | Looks up index 4 in `tens`, getting `"XL"`. |
-| `num % 10` | 9 | Looks up index 9 in `ones`, getting `"IX"`. |
-| Final string combination | `"MMMDCCXLIX"` | Concatenates all parts together and returns. |
+| num (input) | num / 1000 | (num % 1000) / 100 | (num % 100) / 10 | num % 10 | Lookup and Result |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| 3749 | 3 | 7 | 4 | 9 | ths[3] ("MMM") + hrns[7] ("DCC") + tens[4] ("XL") + ones[9] ("IX") -> "MMMDCCXLIX" |
 
-### Case 2: Edge case with subtractive forms (num = 58)
+### Case 2: Edge case with small value and subtractive forms (num = 58)
 
-| Variable / Expression | Value | Action |
-| :--- | :--- | :--- |
-| `num` | 58 | Starting input value. |
-| `num / 1000` | 0 | Looks up index 0 in `ths`, getting `""` (empty). |
-| `(num % 1000) / 100` | 0 | Looks up index 0 in `hrns`, getting `""` (empty). |
-| `(num % 100) / 10` | 5 | Looks up index 5 in `tens`, getting `"L"`. |
-| `num % 10` | 8 | Looks up index 8 in `ones`, getting `"VIII"`. |
-| Final string combination | `"LVIII"` | Concatenates all parts together and returns. |
+| num (input) | num / 1000 | (num % 1000) / 100 | (num % 100) / 10 | num % 10 | Lookup and Result |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| 58 | 0 | 0 | 5 | 8 | ths[0] ("") + hrns[0] ("") + tens[5] ("L") + ones[8] ("VIII") -> "LVIII" |
 
 ## Time & Space Complexity
 
-- **Time:** O(1) — The code performs a fixed number of basic arithmetic operations and string lookups regardless of the input size (since the input is strictly capped at 3999).
-- **Space:** O(1) — The arrays (`ones`, `tens`, `hrns`, `ths`) take a tiny, fixed amount of memory that never grows.
+- **Time:** O(1) — The code performs a fixed number of basic math operations (division, modulo) and array lookups regardless of the input value. Because the input is capped at 3999, it never scales with a growing data size.
+- **Space:** O(1) — The four string arrays have a fixed, constant size (10, 10, 10, and 4 elements) and require a constant amount of memory.
 
 **Is this already the most optimal possible complexity for this problem, or can it be improved?**
 
-Yes, this is already optimal. Both time complexity and space complexity are O(1) (constant time and constant space). You cannot go faster than a single pass of basic math lookups, and you cannot use less memory than a few tiny, fixed-size string arrays.
+Yes, this is already the most optimal possible solution. 
+- **Time complexity:** O(1) is the absolute best theoretical time complexity because you cannot process a number faster than a constant set of math operations.
+- **Space complexity:** O(1) is optimal because the lookup storage requirements never grow; they remain completely static. No further improvements are possible.
 
 ## Edge Cases Handled
 
-- **Numbers with missing place values (like 50):** Handled cleanly because the index arrays start with an empty string (`""`), so missing digits contribute nothing to the final string instead of causing errors.
-- **Subtractive forms (like 4 or 9):** Handled because the lookup arrays explicitly include the correct Roman representations for values like "IV" or "XC" at indices 4 and 9.
-- **Maximum boundary constraint (3999):** Handled because the `ths` array provides combinations up to index 3 ("MMM"), which matches the upper limit of the problem constraints.
+- **Minimum value constraint (num = 1):** Correctly handles single-digit inputs by returning "I" using the ones array while other arrays evaluate to empty strings.
+- **Maximum value constraint (num = 3999):** Correctly handles the highest possible constrained input, mapping it to "MMMCMXCIX".
+- **Zeros in place values:** Handles numbers with zeros (like 1994, where the tens place yields 90 and ones yield 4, but no tens require special handling) because the index 0 in every array points to an empty string (""), which safely contributes nothing to the final concatenation.
+- **Subtractive forms (4 and 9 patterns):** Correctly captures values requiring "IV", "IX", "XL", "XC", "CD", and "CM" because they are hardcoded directly into the lookup tables at their respective indices.
