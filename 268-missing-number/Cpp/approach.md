@@ -1,102 +1,85 @@
-![Runtime](https://img.shields.io/badge/Runtime-12%20ms%20(beats%2012.42%25)-red?style=for-the-badge)
-![Memory](https://img.shields.io/badge/Memory-20.8%20MB%20(beats%2099.97%25)-brightgreen?style=for-the-badge)
+![Runtime](https://img.shields.io/badge/Runtime-12%20ms%20(beats%2012.44%25)-red?style=for-the-badge)
+![Memory](https://img.shields.io/badge/Memory-20.8%20MB%20(beats%2099.98%25)-brightgreen?style=for-the-badge)
 
 ---
 
 ## Problem Explained
 
-You are given an array of numbers called `nums`. The array has a length of `n`. 
+You are given an array of numbers called `nums`. If the array contains `n` numbers, those numbers are taken from the full range of `0` to `n`. 
 
-Inside `nums`, you are supposed to have all the numbers starting from `0` up to `n`. However, exactly one number from that range is missing, and all numbers present are unique. 
+Because there are `n + 1` total numbers in the full range from `0` to `n`, but the array only has `n` slots, exactly one number is missing. Your job is to find and return that single missing number.
 
-Your goal is to find and return the missing number.
-
-For example, if `nums = [3, 0, 1]`, the length `n` is `3`. The full list of numbers from `0` to `3` should be `0, 1, 2, 3`. Looking at `nums`, the number `2` is missing.
+For example, if `nums = [3, 0, 1]`, there are `3` numbers in the array (`n = 3`). The full list of numbers should be `0, 1, 2, 3`. Looking at the array, `2` is missing, so the answer is `2`.
 
 ## Intuition
 
-Think of this like checking the total price on a receipt. 
+The core idea relies on a simple math rule: we can calculate what the sum of all numbers from `0` to `n` *should* be using a famous formula:
 
-If you know what every item from `0` to `n` should sum up to, you can compare that to the actual sum of the items you actually have. The difference between the expected total and your actual total is the missing item.
-
-There is a simple math formula to find the sum of all numbers from `0` to `n` without adding them one by one: 
-
-```
-expected_sum = n * (n + 1) / 2
+```text
+expected_sum = (n * (n + 1)) / 2
 ```
 
-If you sum all elements in `nums`, and subtract that from `expected_sum`, the remaining value must be the missing number.
+If we add up all the numbers that are actually in our array, that total will be smaller than the expected sum. The difference between the expected total sum and the actual sum of our array is exactly the missing number!
+
+For example, for numbers `0` to `3`:
+* Expected sum: `(3 * 4) / 2 = 6`
+* Actual array elements: `[3, 0, 1]`, which add up to `4`
+* Missing number: `6 - 4 = 2`
 
 ## Approach
 
-* `int sum =0 ;` — Create an integer variable `sum` initialized to `0`. This keeps track of the running total of all numbers inside `nums`.
-* `for( int i=0 ; i<nums.size() ; i++){` — Start a loop using index `i`, running from `0` up to `nums.size() - 1` to look at every element in the array.
-* `sum+=nums[i];` — Add the value of the current element `nums[i]` to `sum`.
-* `int total = (nums.size()*( nums.size()+1))/2;` — Calculate the expected sum of all numbers from `0` to `n` (where `n` is `nums.size()`) using the arithmetic formula, and store it in `total`.
-* `return total-sum;` — Subtract `sum` (what you have) from `total` (what you should have) and return the result.
+Here is how the code works step-by-step:
+
+* `int sum =0 ;`: Creates a tracking variable named `sum` and sets it to `0`. This will hold the total sum of all elements currently inside the array.
+* `for( int i=0 ; i<nums.size() ; i++)`: Starts a loop that goes through every position in `nums`, from index `0` up to `nums.size() - 1`.
+* `sum+=nums[i];`: Adds the element at the current index `nums[i]` to our running variable `sum`.
+* `int total = (nums.size()*( nums.size()+1))/2;`: Uses the math formula to calculate what the sum of all numbers from `0` to `n` (where `n` is `nums.size()`) ought to be, saving it in `total`.
+* `return total-sum;`: Subtracts the actual array total (`sum`) from the full expected total (`total`). The remaining value is our missing number.
 
 ## Dry Run
 
-### Case 1: Typical unsorted input (`nums = [3, 0, 1]`)
+### Case 1: Standard input with unsorted numbers (`nums = [3, 0, 1]`)
 
-Here, `nums.size()` is `3`.
+Array length `nums.size()` is `3`.
 
-| i | nums[i] | sum | total | Action |
-|---|---|---|---|---|
-| - | - | 0 | unassigned | Initialize `sum` to `0`. |
-| 0 | 3 | 3 | unassigned | Add `nums[0]` (3) to `sum`. |
-| 1 | 0 | 3 | unassigned | Add `nums[1]` (0) to `sum`. |
-| 2 | 1 | 4 | unassigned | Add `nums[2]` (1) to `sum`. |
-| End | - | 4 | 6 | Calculate `total` as `(3 * 4) / 2 = 6`. Return `total - sum` (`6 - 4 = 2`). |
+| Step | Loop index `i` | Current element `nums[i]` | Running `sum` | Action / Decision |
+| :--- | :--- | :--- | :--- | :--- |
+| Start | - | - | 0 | Initialize `sum = 0`. |
+| 1 | 0 | 3 | 3 | Add `3` to `sum`. |
+| 2 | 1 | 0 | 3 | Add `0` to `sum`. |
+| 3 | 2 | 1 | 4 | Add `1` to `sum`. |
+| End Loop | - | - | 4 | Loop finishes. |
+| Formula | - | - | 4 | Calculate `total = (3 * (3 + 1)) / 2 = 6`. |
+| Return | - | - | 4 | Return `total - sum` which is `6 - 4 = 2`. |
 
-**Output:** `2`
+### Case 2: Array where missing number is at the boundary (`nums = [0, 1]`)
 
----
+Array length `nums.size()` is `2`.
 
-### Case 2: Missing upper bound value (`nums = [0, 1]`)
-
-Here, `nums.size()` is `2`.
-
-| i | nums[i] | sum | total | Action |
-|---|---|---|---|---|
-| - | - | 0 | unassigned | Initialize `sum` to `0`. |
-| 0 | 0 | 0 | unassigned | Add `nums[0]` (0) to `sum`. |
-| 1 | 1 | 1 | unassigned | Add `nums[1]` (1) to `sum`. |
-| End | - | 1 | 3 | Calculate `total` as `(2 * 3) / 2 = 3`. Return `total - sum` (`3 - 1 = 2`). |
-
-**Output:** `2`
+| Step | Loop index `i` | Current element `nums[i]` | Running `sum` | Action / Decision |
+| :--- | :--- | :--- | :--- | :--- |
+| Start | - | - | 0 | Initialize `sum = 0`. |
+| 1 | 0 | 0 | 0 | Add `0` to `sum`. |
+| 2 | 1 | 1 | 1 | Add `1` to `sum`. |
+| End Loop | - | - | 1 | Loop finishes. |
+| Formula | - | - | 1 | Calculate `total = (2 * (2 + 1)) / 2 = 3`. |
+| Return | - | - | 1 | Return `total - sum` which is `3 - 1 = 2`. |
 
 ## Time & Space Complexity
 
-* **Time Complexity:** **O(n)** — The `for` loop inspects each of the `n` elements in `nums` once. The mathematical calculation takes constant time **O(1)**.
-* **Space Complexity:** **O(1)** — Only two integer variables (`sum` and `total`) are created, using a constant amount of extra memory regardless of the size of `nums`.
+* **Time Complexity:** **O(n)** — The code iterates through the array of length `n` exactly once to calculate the sum. The math formula calculation takes constant O(1) time.
+* **Space Complexity:** **O(1)** — Memory usage is constant because the code only creates two integer variables (`sum` and `total`), regardless of how large the array gets.
 
-### Can this be improved?
+**Is this optimal?**
+Yes, **O(n) time and O(1) space is the theoretical best possible complexity** for an unsorted input array. 
+* You cannot do better than **O(n) time** because you must inspect every number in the array at least once to know which one is absent.
+* You cannot do better than **O(1) space** because no extra memory structures (like hash sets or extra arrays) are used.
 
-This code already achieves the theoretically optimal complexity of **O(n)** time and **O(1)** space. You must visit every number at least once to know what is missing, so you cannot go faster than **O(n)** time. You also cannot use less memory than **O(1)**.
-
-However, arithmetic addition can theoretically cause integer overflow if numbers or array sizes become extremely large (though within this problem's constraint of `n <= 10^4`, standard integers will not overflow). 
-
-An alternative technique uses **Bitwise XOR** logic instead of addition. The XOR operation (`^`) cancels out identical numbers (because `A ^ A = 0` and `A ^ 0 = A`). If you XOR all numbers from `0` to `n` together with all numbers inside `nums`, every number present twice cancels out, leaving only the missing number.
-
-```cpp
-int missingNumber(vector<int>& nums) {
-    int xor_all = nums.size();
-    for (int i = 0; i < nums.size(); i++) {
-        xor_all ^= i ^ nums[i];
-    }
-    return xor_all;
-}
-```
-
-* `int xor_all = nums.size();` — Start with `n` so it gets included in the XOR combinations.
-* `xor_all ^= i ^ nums[i];` — XOR the index `i` (representing complete range values) and the actual value `nums[i]` into `xor_all`.
-
-**Improved Complexity:** **Time:** **O(n)**, **Space:** **O(1)**. This matches the optimal theoretical bounds while eliminating any risk of number overflow.
+*(Note: An alternative O(n) time, O(1) space solution uses the Bitwise XOR operator `^` to avoid potential integer overflow if `n` were extremely large, but both approaches share the exact same optimal Big-O complexity).*
 
 ## Edge Cases Handled
 
-* **Smallest array size (`n = 1`):** Works when `nums` contains only `[0]` (returns `1`) or `[1]` (returns `0`).
-* **Missing element is `0`:** If the array contains `[1, 2, 3]`, `total` is `6` and `sum` is `6`. The formula yields `6 - 6 = 0`, correctly detecting `0`.
-* **Missing element is `n`:** Handled smoothly, as shown in Case 2 of the Dry Run.
-* **Unsorted arrays:** The order of numbers does not affect addition. Unsorted inputs like `[9, 6, 4, 2, 3, 5, 7, 0, 1]` work without sorting.
+* **Missing number is 0:** If `nums = [1, 2, 3]`, `total` is `6` and `sum` is `6`. The calculation `6 - 6` correctly returns `0`.
+* **Missing number is n:** If `nums = [0, 1]`, `total` is `3` and `sum` is `1`. The calculation `3 - 1` correctly returns `2`.
+* **Single element array:** If `nums = [0]`, `total` is `1` and `sum` is `0`, returning `1`. If `nums = [1]`, `total` is `1` and `sum` is `1`, returning `0`.
+* **Unordered input:** Addition works the same regardless of order, so scrambled inputs like `[9, 6, 4, 2, 3, 5, 7, 0, 1]` compute the correct total without requiring prior sorting.
