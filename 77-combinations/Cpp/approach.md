@@ -5,72 +5,123 @@
 
 ## Problem Explained
 
-Imagine you have a row of numbered boxes from 1 up to some number **n**. Your job is to find every possible group of size **k** that you can make out of those numbers. 
+The problem asks us to find all possible groups of `k` unique numbers chosen from the range `1` to `n`. 
 
-For example, if **n** is 4 and **k** is 2, you want to pick groups of 2 numbers from the numbers 1, 2, 3, and 4. 
-The possible groups are:
-- 1 and 2
-- 1 and 3
-- 1 and 4
-- 2 and 3
-- 2 and 4
-- 3 and 4
+In combinations, **order does not matter**. For example, `[1, 2]` and `[2, 1]` are considered the exact same combination, so we should only include one of them.
 
-Order inside the group does not matter. This means the group [1, 2] is the exact same thing as the group [2, 1], so you only list it once. You just need to return all of these unique groups in any order.
+### Example
+If `n = 4` and `k = 2`, our available pool of numbers is `[1, 2, 3, 4]`. We need to pick groups of `2` numbers:
+* Answer: `[[1,2], [1,3], [1,4], [2,3], [2,4], [3,4]]`
+* Notice that `[2,1]` is not included because `[1,2]` already covers it.
+
+---
 
 ## Intuition
 
-The core idea here is **backtracking** (also known as a systematic trial-and-error search). Think of it like building a combination one number at a time. 
+To avoid generating duplicates like `[2, 1]` when we already have `[1, 2]`, we enforce a simple rule: **always pick numbers in strictly increasing order**. 
 
-You start with an empty spot and try putting a 1 in it. Then you move to the next spot and try a 2, making your first valid group [1, 2]. Then you backtrack—meaning you step back, swap out the 2 for a 3, and make [1, 3]. 
+If we choose `1` first, the next numbers must be picked from `2, 3, 4`. If we choose `2` first, the next numbers must be picked from `3, 4`. This guarantees that every combination is unique and sorted.
 
-To make this super fast and avoid wasting time, two smart things happen in this solution:
-1. **No duplicates:** We always pick numbers in increasing order (like 1 then 2, never 2 then 1). By always moving forward (`i + 1`), we never look backward, which naturally prevents duplicate groups.
-2. **Pre-allocated space:** Instead of growing our temporary combination list one element at a time using slow push operations, we create a blank container of size **k** right at the start and overwrite slots directly. When **k** counts down to 0, a full combination is ready and saved.
+We build each combination step-by-step using **backtracking** (a recursive process of exploring a choice, going deeper, and then trying the next choice):
+1. Pick a number.
+2. Put it in our current combination list.
+3. Recursively pick the remaining numbers from the higher values left.
+4. Once a combination reaches length `k`, save it to our results.
+
+A neat trick in this C++ code is pre-allocating a vector of size `k`. Instead of adding and removing elements repeatedly (`push_back` and `pop_back`), the code directly overwrites the array slots at calculated positions.
+
+---
 
 ## Approach
 
-Here is how the code executes, step by step:
+Here is how the code works step-by-step:
 
-- `vector<vector<int>> result;`: Creates an outer list named **result** to hold all of our completed combinations.
-- `vector<int> combination(k);`: Creates a single temporary list named **combination** pre-sized to hold exactly **k** numbers.
-- `generateCombinations(1, n, k, combination, result);`: Launches the helper function starting our search at number 1, with our target size **k**.
-- `if (k == 0) { result.push_back(combination); return; }`: Checks if our combination is completely full (because **k** has counted down to 0). If it is, we copy it into **result** and stop this branch.
-- `for (int i = start; i <= n; ++i)`: Loops through every available number from **start** up to **n** to try building combinations.
-- `combination[combination.size() - k] = i;`: Places our current choice **i** directly into the correct open slot inside the **combination** list.
-- `generateCombinations(i + 1, n, k - 1, combination, result);`: Recursively calls the function to fill the next slot, moving our starting point to **i + 1** so we never reuse a number, and reducing **k** by 1.
+* `vector<int> combination(k);`: Creates a fixed-size vector of length `k`. This avoids dynamic array resizing during recursion.
+* `generateCombinations(1, n, k, combination, result);`: Starts the recursive helper function. We pass `1` as our starting number and `k` as the count of numbers left to pick.
+* `if (k == 0)`: Checks if we have picked all `k` numbers needed. When `k` reaches `0`, the combination is full.
+* `result.push_back(combination);`: Adds the completed `combination` vector to our overall list of results.
+* `return;`: Steps back out of the current recursion layer to explore other choices.
+* `for (int i = start; i <= n; ++i)`: Loops through every valid integer `i` from `start` up to `n`.
+* `combination[combination.size() - k] = i;`: Places the chosen number `i` into the correct index of `combination`. The index is computed as `combination.size() - k`.
+* `generateCombinations(i + 1, n, k - 1, combination, result);`: Recursively calls the helper to pick the next number. We pass `i + 1` so we only pick larger numbers, and `k - 1` because we need one fewer number now.
+
+---
 
 ## Dry Run
 
-### Case 1: Typical case (n = 4, k = 2)
+### Case 1: Standard case (`n = 4`, `k = 2`)
 
-| start | n | k | combination | i | Action |
-| :--- | :--- | :--- | :--- | :--- | :--- |
-| 1 | 4 | 2 | [0, 0] | 1 | Loop starts, places 1 at index 0. Recurses with start = 2, k = 1. |
-| 2 | 4 | 1 | [1, 0] | 2 | Places 2 at index 1. Recurses with start = 3, k = 0. |
-| 3 | 4 | 0 | [1, 2] | - | k reaches 0. Pushes [1, 2] to result. Returns. |
-| 2 | 4 | 1 | [1, 2] | 3 | Loop continues, changes index 1 to 3. Recurses with start = 4, k = 0. |
-| 4 | 4 | 0 | [1, 3] | - | k reaches 0. Pushes [1, 3] to result. Returns. |
+| `start` | `k` | `i` | `combination` | Action |
+|---|---|---|---|---|
+| 1 | 2 | 1 | `[1, 0]` | Set index 0 (`2 - 2`) to 1. Recurse with `start=2, k=1`. |
+| 2 | 1 | 2 | `[1, 2]` | Set index 1 (`2 - 1`) to 2. Recurse with `start=3, k=0`. |
+| 3 | 0 | - | `[1, 2]` | Base case (`k == 0`). Add `[1, 2]` to `result`. Return. |
+| 2 | 1 | 3 | `[1, 3]` | Set index 1 to 3. Recurse with `start=4, k=0`. |
+| 4 | 0 | - | `[1, 3]` | Base case (`k == 0`). Add `[1, 3]` to `result`. Return. |
+| 2 | 1 | 4 | `[1, 4]` | Set index 1 to 4. Recurse with `start=5, k=0`. |
+| 5 | 0 | - | `[1, 4]` | Base case (`k == 0`). Add `[1, 4]` to `result`. Return. |
+| 1 | 2 | 2 | `[2, 4]` | Set index 0 to 2. Recurse with `start=3, k=1`. |
+| 3 | 1 | 3 | `[2, 3]` | Set index 1 to 3. Recurse with `start=4, k=0`. |
+| 4 | 0 | - | `[2, 3]` | Base case (`k == 0`). Add `[2, 3]` to `result`. Return. |
+| 3 | 1 | 4 | `[2, 4]` | Set index 1 to 4. Recurse with `start=5, k=0`. |
+| 5 | 0 | - | `[2, 4]` | Base case (`k == 0`). Add `[2, 4]` to `result`. Return. |
+| 1 | 2 | 3 | `[3, 4]` | Set index 0 to 3. Recurse with `start=4, k=1`. |
+| 4 | 1 | 4 | `[3, 4]` | Set index 1 to 4. Recurse with `start=5, k=0`. |
+| 5 | 0 | - | `[3, 4]` | Base case (`k == 0`). Add `[3, 4]` to `result`. Return. |
+| 1 | 2 | 4 | `[4, 4]` | Set index 0 to 4. Recurse with `start=5, k=1`. Loop `i <= 4` ends. |
 
-*(The loop continues similarly, finding [1, 4], [2, 3], [2, 4], and [3, 4]).*
+Final `result` = `[[1,2], [1,3], [1,4], [2,3], [2,4], [3,4]]`.
 
-### Case 2: Boundary case (n = 1, k = 1)
+---
 
-| start | n | k | combination | i | Action |
-| :--- | :--- | :--- | :--- | :--- | :--- |
-| 1 | 1 | 1 | [0] | 1 | Loop starts, places 1 at index 0. Recurses with start = 2, k = 0. |
-| 2 | 1 | 0 | [1] | - | k reaches 0. Pushes [1] to result. Returns. |
+### Case 2: Max selection (`n = 3`, `k = 3`)
+
+| `start` | `k` | `i` | `combination` | Action |
+|---|---|---|---|---|
+| 1 | 3 | 1 | `[1, 0, 0]` | Set index 0 (`3 - 3`) to 1. Recurse with `start=2, k=2`. |
+| 2 | 2 | 2 | `[1, 2, 0]` | Set index 1 (`3 - 2`) to 2. Recurse with `start=3, k=1`. |
+| 3 | 1 | 3 | `[1, 2, 3]` | Set index 2 (`3 - 1`) to 3. Recurse with `start=4, k=0`. |
+| 4 | 0 | - | `[1, 2, 3]` | Base case (`k == 0`). Add `[1, 2, 3]` to `result`. Return. |
+
+Final `result` = `[[1,2,3]]`.
+
+---
 
 ## Time & Space Complexity
 
-- **Time:** O(C(n, k) * k) — where C(n, k) is the number of combinations (n choose k). The algorithm must visit and build every single valid combination, and copying each combination of size **k** takes **k** steps.
-- **Space:** O(k) — for the recursion stack and the temporary **combination** vector, which both grow up to a maximum depth of **k**. (Note: This excludes the space needed to store the final output **result**, which is required by the problem).
+* **Time Complexity:** O(k * C(n, k)), where `C(n, k) = n! / (k! * (n - k)!)`.
+  * There are `C(n, k)` total combinations.
+  * For each combination found, copying it into `result` takes O(k) time.
+* **Space Complexity:** O(k) auxiliary space.
+  * The recursion depth reaches at most `k` calls.
+  * The temporary `combination` array takes O(k) memory. (We ignore the memory used by `result` for storing the final output).
 
-**Is this already the most optimal possible complexity?**
-Yes, this is already optimal. Any algorithm that returns all combinations of size **k** out of **n** *must* output every single one of them, meaning it cannot do better than time proportional to the number of output combinations. Furthermore, pre-allocating the vector avoids dynamic resizing overhead, beating over 99 percent of submissions. No further improvement is possible.
+### Can it be improved?
+
+Yes, we can optimize the execution time using **loop pruning**.
+
+Currently, the loop runs `for (int i = start; i <= n; ++i)`. However, if there are not enough remaining numbers left in `[i, n]` to fill the remaining `k` slots, exploring that branch is a waste of work.
+
+To pick `k` numbers, we need at least `k` elements available. If we consider index `i`, there are `n - i + 1` elements remaining. We must ensure `n - i + 1 >= k`, which simplifies to `i <= n - k + 1`.
+
+#### Pruned Code Optimization:
+```cpp
+// Change the loop condition from 'i <= n' to 'i <= n - k + 1'
+for (int i = start; i <= n - k + 1; ++i) {
+    combination[combination.size() - k] = i;
+    generateCombinations(i + 1, n, k - 1, combination, result);
+}
+```
+
+* **Why it works:** If `n = 4` and we need `k = 2` numbers, starting at `i = 4` leaves only 1 number available (`[4]`), but we need 2 numbers. `n - k + 1` equals `4 - 2 + 1 = 3`. So `i` stops at `3`, avoiding dead branches completely.
+* **Improved Complexity:** The Big-O theoretical bound stays **O(k * C(n, k))**, but actual runtime drops significantly because zero invalid recursive paths are explored.
+* **Optimal Status:** This pruned version achieves the **theoretical best possible complexity** for this problem, as any algorithm must at least spend time generating and storing all `C(n, k)` valid output items.
+
+---
 
 ## Edge Cases Handled
 
-- **k equals n:** The loop runs through all numbers from 1 to **n**, fills every slot, and correctly returns just one single combination containing all numbers.
-- **k equals 1:** The function immediately builds single-element combinations for every number from 1 to **n** and returns them cleanly.
-- **Minimum constraints (n = 1, k = 1):** Handled smoothly by outputting [[1]] without crashing or triggering infinite loops.
+* **Single Element Pick (`k = 1`):** The logic cleanly runs the loop once per number, returning `[[1], [2], ..., [n]]`.
+* **Select All Elements (`k = n`):** The recursion follows exactly one path straight down to produce `[[1, 2, ..., n]]`.
+* **Smallest Input (`n = 1, k = 1`):** Handled seamlessly without out-of-bounds array access.
+* **No Duplicate Work:** By passing `i + 1` to the next call, the algorithm avoids generating permutations or repeated values without needing extra dynamic memory (like hash sets).
