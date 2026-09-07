@@ -1,106 +1,106 @@
 ![Runtime](https://img.shields.io/badge/Runtime-0%20ms%20(beats%20100.00%25)-brightgreen?style=for-the-badge)
-![Memory](https://img.shields.io/badge/Memory-11.7%20MB%20(beats%2048.70%25)-yellow?style=for-the-badge)
+![Memory](https://img.shields.io/badge/Memory-11.7%20MB%20(beats%2048.75%25)-yellow?style=for-the-badge)
 
 ---
 
 ## Problem Explained
 
-The problem asks you to reorder an array named `nums` containing numbers that represent colors:
-- `0` represents red
-- `1` represents white
-- `2` represents blue
+The problem asks us to sort an array called `nums` containing only three numbers: 0, 1, and 2. 
 
-You need to sort these numbers in-place so that all `0`s come first, followed by all `1`s, and then all `2`s. 
+These numbers represent colors:
+* **0** represents Red
+* **1** represents White
+* **2** represents Blue
 
-"In-place" means you must rearrange the original array directly without creating a new copy of the array. You are also explicitly forbidden from using language built-in sort functions.
+We must rearrange the array in-place so that all 0s come first, followed by all 1s, and then all 2s at the end. Rearranging **in-place** means we must modify the given array directly without creating a new array. We are also not allowed to use standard built-in sorting functions.
 
-For example, if you are given `nums = [2, 0, 2, 1, 1, 0]`, the correct result is `[0, 0, 1, 1, 2, 2]`.
+**Example:**
+* **Input:** `nums = [2, 0, 2, 1, 1, 0]`
+* **Output:** `[0, 0, 1, 1, 2, 2]`
 
 ---
 
 ## Intuition
 
-This problem is a classic puzzle known as the **Dutch National Flag problem**.
+Since there are only three distinct values (0, 1, and 2), we do not need a full sorting algorithm like Merge Sort or Quick Sort. Instead, we can divide the array into three regions:
 
-Because there are only three unique values (`0`, `1`, and `2`), we do not need a standard sorting algorithm like Quicksort or Bubble Sort. Instead, we can divide the array into three sections using three pointers:
-1. A **start pointer** (`s`) to keep track of where the next `0` should go at the front.
-2. An **end pointer** (`e`) to keep track of where the next `2` should go at the back.
-3. A **current pointer** (`i`) to scan through the elements one by one.
+1. A **left region** for all 0s.
+2. A **middle region** for all 1s.
+3. A **right region** for all 2s.
 
-The "aha" moment comes from how we handle each number as we scan:
-- If we see a `0`, we swap it to the left boundary (`s`) and step both `s` and `i` forward.
-- If we see a `2`, we swap it to the right boundary (`e`) and step `e` backward. **Crucially, we do not move `i` forward yet**, because the element swapped from the back has not been inspected yet.
-- If we see a `1`, it is already in its middle area, so we just step `i` forward.
+This is famously known as the **Dutch National Flag algorithm**. We use three pointers to maintain these boundaries:
+* `s` (start) marks where the next 0 should go on the left.
+* `e` (end) marks where the next 2 should go on the right.
+* `i` scans elements from left to right.
+
+When `i` encounters a 0, we swap it to the `s` region. When `i` encounters a 2, we swap it to the `e` region. When `i` encounters a 1, we leave it in place because 1s belong in the middle.
 
 ---
 
 ## Approach
 
-Here is the exact step-by-step logic of the code:
+Here is how the logic works step-by-step:
 
-- `int n= nums.size();`: Stores the total number of elements in the `nums` array.
-- `int s=0 , e= n-1;`: Sets up two boundary pointers. `s` starts at index `0` (left side) for zeros, and `e` starts at index `n - 1` (right side) for twos.
-- `int i=0;`: Initializes the scanner pointer `i` at the first element (index `0`).
-- `while( i<=e)`: Continues the loop as long as the current scanner `i` has not moved past the right boundary `e`.
-- `if( nums[i]==0)`: Checks if the current element is `0`.
-- `swap( nums[i] , nums[s]); i++;s++;`: Swaps the current `0` into the left boundary position `s`. Then increments both `s` and `i` by `1` because we know position `s` now holds a `0`, and the value brought to position `i` is already known to be clean.
-- `else if( nums[i]==2)`: Checks if the current element is `2`.
-- `swap( nums[i] , nums[e]); e--;`: Swaps the current `2` into the right boundary position `e` and decrements `e` by `1`. Notice that `i` is **not** incremented here, because the element swapped from position `e` into position `i` has not been evaluated yet.
-- `else`: Runs when the current element is `1`.
-- `i++;`: Leaves the `1` in place in the middle section and moves the scanner pointer `i` one position forward.
+* `int n= nums.size();`: Stores the total number of elements in `nums`.
+* `int s=0 , e= n-1;`: Sets `s` at index 0 to place 0s at the start, and `e` at the last index (`n - 1`) to place 2s at the end.
+* `int i=0;`: Sets the scanning pointer `i` to index 0 to begin examining elements.
+* `while( i<=e)`: Continues looping as long as `i` has not passed `e`. We stop at `e` because elements past `e` are already correctly placed 2s.
+* `if( nums[i]==0)`: Checks if the current element at index `i` is 0.
+* `swap( nums[i] , nums[s]);`: Swaps the 0 at `i` with whatever is at index `s`, putting the 0 into the left region.
+* `i++;s++;`: Moves `s` right because the spot for 0 is filled. Moves `i` right because the value swapped into `i` is guaranteed to be in the correct relative place.
+* `else if( nums[i]==2)`: Checks if the current element at index `i` is 2.
+* `swap( nums[i] , nums[e]);`: Swaps the 2 at `i` with the element at index `e`, putting the 2 into the right region.
+* `e--;`: Moves `e` left because a 2 was placed. Note that `i` is **not** incremented here because the newly swapped element coming from `e` has not been checked yet.
+* `else`: Triggers when `nums[i]` is 1.
+* `i++;`: Leaves the 1 in place and advances `i` to inspect the next element.
 
 ---
 
 ## Dry Run
 
-### Case 1: Typical case with all three colors (`nums = [2, 0, 2, 1, 1, 0]`)
+### Case 1: Typical case with mixed colors
+**Input:** `nums = [2, 0, 2, 1, 1, 0]`
 
-Initial values: `s = 0`, `e = 5`, `i = 0`
+| Step | `i` | `s` | `e` | Array `nums` | Action |
+|---|---|---|---|---|---|
+| Start | 0 | 0 | 5 | `[2, 0, 2, 1, 1, 0]` | Initial state |
+| 1 | 0 | 0 | 5 | `[0, 0, 2, 1, 1, 2]` | `nums[0] == 2`: Swap `nums[0]` with `nums[5]`, `e` becomes 4 |
+| 2 | 0 | 0 | 4 | `[0, 0, 2, 1, 1, 2]` | `nums[0] == 0`: Swap `nums[0]` with `nums[0]`, `s` becomes 1, `i` becomes 1 |
+| 3 | 1 | 1 | 4 | `[0, 0, 2, 1, 1, 2]` | `nums[1] == 0`: Swap `nums[1]` with `nums[1]`, `s` becomes 2, `i` becomes 2 |
+| 4 | 2 | 2 | 4 | `[0, 0, 1, 1, 2, 2]` | `nums[2] == 2`: Swap `nums[2]` with `nums[4]`, `e` becomes 3 |
+| 5 | 2 | 2 | 3 | `[0, 0, 1, 1, 2, 2]` | `nums[2] == 1`: Leave in place, `i` becomes 3 |
+| 6 | 3 | 2 | 3 | `[0, 0, 1, 1, 2, 2]` | `nums[3] == 1`: Leave in place, `i` becomes 4 |
 
-| `i` | `s` | `e` | `nums` | Action |
-| --- | --- | --- | --- | --- |
-| 0 | 0 | 5 | `[2, 0, 2, 1, 1, 0]` | `nums[0]` is `2`. Swap `nums[0]` and `nums[5]`. Decrement `e` to `4`. |
-| 0 | 0 | 4 | `[0, 0, 2, 1, 1, 2]` | `nums[0]` is `0`. Swap `nums[0]` and `nums[0]`. Increment `i` to `1`, `s` to `1`. |
-| 1 | 1 | 4 | `[0, 0, 2, 1, 1, 2]` | `nums[1]` is `0`. Swap `nums[1]` and `nums[1]`. Increment `i` to `2`, `s` to `2`. |
-| 2 | 2 | 4 | `[0, 0, 2, 1, 1, 2]` | `nums[2]` is `2`. Swap `nums[2]` and `nums[4]`. Decrement `e` to `3`. |
-| 2 | 2 | 3 | `[0, 0, 1, 1, 2, 2]` | `nums[2]` is `1`. Increment `i` to `3`. |
-| 3 | 2 | 3 | `[0, 0, 1, 1, 2, 2]` | `nums[3]` is `1`. Increment `i` to `4`. |
+Loop ends because `i` (4) is now greater than `e` (3). Final array is `[0, 0, 1, 1, 2, 2]`.
 
-Loop ends because `i (4) > e (3)`. Final sorted array: `[0, 0, 1, 1, 2, 2]`.
+### Case 2: Short array with three unique elements
+**Input:** `nums = [2, 0, 1]`
 
----
+| Step | `i` | `s` | `e` | Array `nums` | Action |
+|---|---|---|---|---|---|
+| Start | 0 | 0 | 2 | `[2, 0, 1]` | Initial state |
+| 1 | 0 | 0 | 2 | `[1, 0, 2]` | `nums[0] == 2`: Swap `nums[0]` with `nums[2]`, `e` becomes 1 |
+| 2 | 0 | 0 | 1 | `[1, 0, 2]` | `nums[0] == 1`: Leave in place, `i` becomes 1 |
+| 3 | 1 | 0 | 1 | `[0, 1, 2]` | `nums[1] == 0`: Swap `nums[1]` with `nums[0]`, `s` becomes 1, `i` becomes 2 |
 
-### Case 2: Small array (`nums = [2, 0, 1]`)
-
-Initial values: `s = 0`, `e = 2`, `i = 0`
-
-| `i` | `s` | `e` | `nums` | Action |
-| --- | --- | --- | --- | --- |
-| 0 | 0 | 2 | `[2, 0, 1]` | `nums[0]` is `2`. Swap `nums[0]` and `nums[2]`. Decrement `e` to `1`. |
-| 0 | 0 | 1 | `[1, 0, 2]` | `nums[0]` is `1`. Increment `i` to `1`. |
-| 1 | 0 | 1 | `[1, 0, 2]` | `nums[1]` is `0`. Swap `nums[1]` and `nums[0]`. Increment `i` to `2`, `s` to `1`. |
-
-Loop ends because `i (2) > e (1)`. Final sorted array: `[0, 1, 2]`.
+Loop ends because `i` (2) is now greater than `e` (1). Final array is `[0, 1, 2]`.
 
 ---
 
 ## Time & Space Complexity
 
-- **Time Complexity:** O(n) — The algorithm makes a single pass over the array of size `n`. In each loop step, either `i` moves right or `e` moves left, meaning we process each element at most once.
-- **Space Complexity:** O(1) — The solution operates directly on the input vector and only uses three integer variables (`s`, `e`, `i`) to keep track of state, consuming constant extra memory.
+* **Time Complexity:** **O(n)** — We traverse the array in a single pass. In every iteration of the `while` loop, either `i` increases by 1 or `e` decreases by 1. Therefore, the loop runs at most `n` times, where `n` is the number of elements in `nums`.
+* **Space Complexity:** **O(1)** — We modify the input array in-place using only three integer variable pointers (`s`, `e`, `i`). No extra dynamic memory is allocated.
 
-**Is this already the most optimal possible complexity?**
-
-Yes, this solution is fully optimal:
-- **Time:** You must look at every element at least once to determine its color, making O(n) the lower bound for time complexity.
-- **Space:** O(1) is the absolute minimum auxiliary space since no extra data structures are allocated.
-- **Passes:** It answers the follow-up question by sorting the entire array in a **single pass**. No further performance improvements are possible.
+**Is this solution optimal?**
+Yes, this code is already fully optimal. Any algorithm sorting an array must examine each element at least once, which requires a minimum of **O(n)** time. Rearranging elements in-place requires a minimum of **O(1)** space. Because this solution achieves **O(n)** time in a single pass and **O(1)** space, no further time or space improvements are possible.
 
 ---
 
 ## Edge Cases Handled
 
-- **Single Element Array (`n = 1`):** For input like `nums = [0]`, `s` starts at `0`, `e` starts at `0`, `i` starts at `0`. The loop runs once, correctly leaves the element untouched, and terminates safely.
-- **Array Already Sorted:** Inputs like `nums = [0, 1, 2]` work seamlessly. `0` swaps with itself, `1` advances `i`, and `2` swaps with itself, maintaining correct order.
-- **Array with Only One Color:** Inputs containing all zeros (`[0, 0, 0]`), all ones (`[1, 1, 1]`), or all twos (`[2, 2, 2]`) execute without going out of bounds because `i <= e` constantly prevents out-of-range memory access.
-- **Array with Missing Colors:** Inputs containing only two of the three colors (for example, only `0`s and `2`s like `[2, 0, 2, 0]`) are handled cleanly without needing special conditional checks.
+* **Single Element Array (`nums = [0]`):** The loop condition `i <= e` starts with `i = 0` and `e = 0`. It evaluates the element once and terminates cleanly without out-of-bounds access.
+* **Array with Only One Color (`nums = [1, 1, 1]`):** Pointer `i` simply increments across the array without making unnecessary swaps.
+* **Already Sorted Array (`nums = [0, 1, 2]`):** The algorithm processes each boundary condition without altering the sorted order.
+* **Reverse Sorted Array (`nums = [2, 2, 0, 0]`):** Correctly places 2s at the right and swaps 0s to the left without infinite loops.
+* **Missing Colors (`nums = [0, 2, 0]`):** Works seamlessly even when one of the colors (like 1) is completely absent from the array.
