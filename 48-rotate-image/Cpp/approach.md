@@ -5,67 +5,92 @@
 
 ## Problem Explained
 
-Imagine you have a square grid of numbers. This could be a picture made of pixels, or just a grid of data. The problem asks you to rotate this entire square grid 90 degrees in a clockwise direction. 
+You are given an `n x n` square grid of numbers representing an image. Your goal is to rotate the image **90 degrees clockwise** (to the right). 
 
-For example, if the top row is [1, 2, 3], after a 90-degree clockwise turn, that row becomes the rightmost column. 
+The key constraint is that you must do this **in-place**. This means you cannot create a second matrix to build the answer. You must rearrange the elements directly inside the original matrix without using extra matrix storage.
 
-There is a major catch: you must do this **in-place**. This means you are not allowed to create a second, separate grid to copy the rotated version into. You have to rearrange the numbers inside the original grid directly by swapping them around.
+For example, given this 3x3 matrix:
+```text
+1  2  3
+4  5  6
+7  8  9
+```
+
+After a 90-degree clockwise rotation, it should become:
+```text
+7  4  1
+8  5  2
+9  6  3
+```
 
 ## Intuition
 
-If you try to turn every single number 90 degrees all at once in your head, it gets very confusing. The clever trick to solve this easily is to break the rotation down into two simple, separate steps:
+Rotating a matrix directly cell-by-cell can involve tricky math to keep track of four moving corners at once. 
 
-1. **Transpose the matrix:** This means flipping the grid across its main diagonal (the line running from the top-left corner to the bottom-right corner). Rows become columns, and columns become rows. 
-2. **Reverse each row:** Once you have transposed the grid, if you simply flip every row horizontally (so the left side swaps with the right side), the grid is now magically rotated 90 degrees clockwise.
+A cleaner, two-step trick simplifies this completely:
+1. **Transpose the matrix**: Swap elements across the main diagonal (top-left to bottom-right). This turns every row into a column.
+2. **Reverse each row horizontally**: Flip each row from left to right.
 
-This two-step approach avoids complex math and lets you rotate any square grid cleanly using simple row and column loops.
+Combining these two simple transformations yields the exact same result as rotating the entire grid 90 degrees clockwise.
 
 ## Approach
 
-- `for( int i=0 ; i<matrix.size() ; i++)`: This outer loop picks each row one by one, starting from the top row and moving downward. The variable `i` represents the current row index.
-- `for( int j=i ; j<matrix[i].size() ; j++)`: This inner loop goes across the columns. Notice that `j` starts at `i` instead of `0`. This ensures we only visit numbers on or above the main diagonal, preventing us from undoing our swaps later.
-- `swap( matrix[i][j] , matrix[j][i] );`: This line performs the transpose step. It takes the number at row `i`, column `j` and swaps its position with the number at row `j`, column `i`.
-- `for( int i=0 ; i<matrix.size() ; i++)`: This loop goes through every row again, preparing for the second phase of the rotation.
-- `reverse( matrix[i].begin() , matrix[i].end());`: This takes the current row `i` and reverses the order of its elements completely, turning the transposed grid into a fully 90-degree clockwise rotated grid.
+Here is how the code executes this two-step process:
+
+* `for( int i=0 ; i<matrix.size() ; i++)`: Loops through each row index `i` from the top of the matrix to the bottom.
+* `for( int j=i ; j<matrix[i].size() ; j++)`: Loops through column index `j`. Starting `j` at `i` ensures we only process elements on and above the main diagonal, preventing double-swapping back to the original layout.
+* `swap( matrix[i][j] , matrix[j][i] )`: Transposes the matrix by swapping the element at row `i`, column `j` with the element at row `j`, column `i`.
+* `for( int i=0 ; i<matrix.size() ; i++)`: Loops through every row index `i` a second time after the full transpose step finishes.
+* `reverse( matrix[i].begin() , matrix[i].end())`: Reverses the elements in row `i` from left to right, completing the clockwise rotation.
 
 ## Dry Run
 
-### Case 1: Typical 3x3 matrix (from problem examples)
-Input: `matrix = [[1, 2, 3], [4, 5, 6], [7, 8, 9]]`
+### Case 1: Standard 3x3 Matrix
+Input: `matrix = [[1,2,3],[4,5,6],[7,8,9]]`
 
-| Step | i | j | Action | Current Matrix State |
+**Step 1: Transpose phase**
+
+| Step / Phase | `i` | `j` | Action | Matrix State |
 | :--- | :--- | :--- | :--- | :--- |
-| Transpose start | 0 | 0 | Loop begins for transpose | `[[1,2,3],[4,5,6],[7,8,9]]` |
-| Swap 1 | 0 | 1 | Swaps matrix[0][1] (2) and matrix[1][0] (4) | `[[1,4,3],[2,5,6],[7,8,9]]` |
-| Swap 2 | 0 | 2 | Swaps matrix[0][2] (3) and matrix[2][0] (7) | `[[7,4,3],[2,5,6],[1,8,9]]` |
-| Swap 3 | 1 | 2 | Swaps matrix[1][2] (6) and matrix[2][1] (8) | `[[7,4,3],[2,5,8],[1,6,9]]` |
-| Reverse start | 0 | - | Reverses row 0: [7, 4, 3] becomes [3, 4, 7] | `[[3,4,7],[2,5,8],[1,6,9]]` |
-| Reverse mid | 1 | - | Reverses row 1: [2, 5, 8] stays [2, 5, 8] | `[[3,4,7],[2,5,8],[1,6,9]]` |
-| Reverse end | 2 | - | Reverses row 2: [1, 6, 9] becomes [9, 6, 1] | `[[3,4,7],[2,5,8],[9,6,1]]` *(Wait, let's trace carefully: row 2 was [1, 8, 9], reversed it is [9, 8, 1]. Let's look at output: [[7,4,1],[8,5,2],[9,6,3]])* |
+| Start | - | - | Initial input | `[[1,2,3],[4,5,6],[7,8,9]]` |
+| Transpose | 0 | 0 | Swap `matrix[0][0]` (1) with `matrix[0][0]` (1) | `[[1,2,3],[4,5,6],[7,8,9]]` |
+| Transpose | 0 | 1 | Swap `matrix[0][1]` (2) with `matrix[1][0]` (4) | `[[1,4,3],[2,5,6],[7,8,9]]` |
+| Transpose | 0 | 2 | Swap `matrix[0][2]` (3) with `matrix[2][0]` (7) | `[[1,4,7],[2,5,6],[3,8,9]]` |
+| Transpose | 1 | 1 | Swap `matrix[1][1]` (5) with `matrix[1][1]` (5) | `[[1,4,7],[2,5,6],[3,8,9]]` |
+| Transpose | 1 | 2 | Swap `matrix[1][2]` (6) with `matrix[2][1]` (8) | `[[1,4,7],[2,5,8],[3,6,9]]` |
+| Transpose | 2 | 2 | Swap `matrix[2][2]` (9) with `matrix[2][2]` (9) | `[[1,4,7],[2,5,8],[3,6,9]]` |
 
-*Correction on trace for row 2:* After transpose, row 2 is `[1, 8, 9]`. Reversing it gives `[9, 8, 1]`. Final output for this standard example produces `[[7, 4, 1], [8, 5, 2], [9, 6, 3]]`.
+**Step 2: Row reverse phase**
 
-### Case 2: Smallest possible matrix (1x1 grid)
-Input: `matrix = [[5]]`
+| Step / Phase | `i` | Action | Matrix State |
+| :--- | :--- | :--- | :--- |
+| Reverse | 0 | Reverse row 0: `[1, 4, 7]` becomes `[7, 4, 1]` | `[[7,4,1],[2,5,8],[3,6,9]]` |
+| Reverse | 1 | Reverse row 1: `[2, 5, 8]` becomes `[8, 5, 2]` | `[[7,4,1],[8,5,2],[3,6,9]]` |
+| Reverse | 2 | Reverse row 2: `[3, 6, 9]` becomes `[9, 6, 3]` | `[[7,4,1],[8,5,2],[9,6,3]]` |
 
-| Step | i | j | Action | Current Matrix State |
-| :--- | :--- | :--- | :--- | :--- |
-| Transpose | 0 | 0 | Loops run once; swapping matrix[0][0] with itself | `[[5]]` |
-| Reverse | 0 | - | Reversing a single-element row changes nothing | `[[5]]` |
+---
+
+### Case 2: 4x4 Matrix
+Input: `matrix = [[5,1,9,11],[2,4,8,10],[13,3,6,7],[15,14,12,16]]`
+
+| Step / Phase | `i` | Action | Matrix State |
+| :--- | :--- | :--- | :--- |
+| Start | - | Initial input | `[[5,1,9,11],[2,4,8,10],[13,3,6,7],[15,14,12,16]]` |
+| Transpose | - | Swap all `(i, j)` with `(j, i)` where `j >= i` | `[[5,2,13,15],[1,4,3,14],[9,8,6,12],[11,10,7,16]]` |
+| Reverse Row 0 | 0 | Reverse row 0 | `[[15,13,2,5],[1,4,3,14],[9,8,6,12],[11,10,7,16]]` |
+| Reverse Row 1 | 1 | Reverse row 1 | `[[15,13,2,5],[14,3,4,1],[9,8,6,12],[11,10,7,16]]` |
+| Reverse Row 2 | 2 | Reverse row 2 | `[[15,13,2,5],[14,3,4,1],[12,6,8,9],[11,10,7,16]]` |
+| Reverse Row 3 | 3 | Reverse row 3 | `[[15,13,2,5],[14,3,4,1],[12,6,8,9],[16,7,10,11]]` |
 
 ## Time & Space Complexity
 
-- **Time:** O(N^2) — where N is the number of rows (or columns) in the matrix. We visit roughly half of the elements during the transpose step (N * (N+1) / 2 operations) and visit all elements once during the row reversals (N * N operations). Since constants and lower-order terms are dropped in big-O notation, this simplifies to O(N^2).
-- **Space:** O(1) — constant extra space. We only use a few variables for loop tracking and swapping, and we modify the input matrix directly without allocating any new data structures.
+* **Time:** **O(n^2)** — where `n` is the width and height of the matrix. The grid has `n * n` total cells. Transposing touches half the elements, and reversing touches all rows. Both steps scale directly with the total number of cells, `n^2`.
+* **Space:** **O(1)** — no extra vectors or matrices are created. All standard memory swaps happen directly inside the original structure.
 
-**Is this already the most optimal possible complexity for this problem, or can it be improved?**
-
-This is already optimal. 
-
-To rotate a matrix of N * N elements, you must touch or move every single element at least once. Visiting every element requires a minimum of O(N^2) time. Because our solution runs in O(N^2) time and uses O(1) extra space, it is mathematically impossible to improve the time complexity further.
+This code is **already optimal**. Every number in an `n x n` matrix must be moved to a new position, so any valid solution must look at all `n * n` elements at least once. Therefore, **O(n^2)** time is the best possible runtime, and **O(1)** extra memory is the best possible space complexity for an in-place algorithm.
 
 ## Edge Cases Handled
 
-- **1x1 Matrix:** Handled cleanly because the loops run once, swaps happen with self, and reversals affect single-element rows without crashing or failing.
-- **Negative Numbers and Zeros:** Handled correctly because the swap and reverse logic treats numbers as abstract values, making no assumptions about their signs.
-- **Maximum Constraint Size (N = 20):** Handled efficiently. An N of 20 means a maximum of 400 total elements, which executes in a fraction of a millisecond and easily passes well within time limits.
+* **1x1 Matrix (`n = 1`)**: When `matrix` has a single cell, `i = 0` and `j = 0`. Swapping an element with itself leaves it untouched, and reversing a 1-element row does nothing. The output correctly stays identical.
+* **Negative numbers and zeroes**: The swap and reverse routines operate purely on cell positions rather than math values, so negative or zero values are safely relocated without issues.
+* **Small matrix limits (`1 <= n <= 20`)**: The code uses basic array indices within bound loops, staying safely within constraint limits.
